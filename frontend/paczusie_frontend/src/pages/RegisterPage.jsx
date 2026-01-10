@@ -60,7 +60,7 @@ const RegisterPage = () => {
                     <h2 className="text-2xl mb-6 font-bold text-[#2C3E50]">
                         Rejestracja
                     </h2>
-                    error && (<div className="bg-red-500 text-white p-3 rounded mb-4">{error}</div>)}
+                    {error && (<div className="bg-red-500 text-white p-3 rounded mb-4">{error}</div>)}
                     <input 
                         type="text" 
                         placeholder="Imię"
