@@ -8,11 +8,13 @@ import ProfilePage from './pages/ProfilePage';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
+import WelcomePopup from './components/WelcomePopup';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <WelcomePopup />
         <Routes>
           {/* Strona Główna */}
           <Route path="/" element={<HomePage />} />  
