@@ -263,7 +263,7 @@ const ProfilePage = () => {
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-gray-500">Nie masz jeszcze żadnych firm. Dodaj pierwszą!</p>
+                                    null
                                 )}
                             </div>
                         </div>
@@ -379,7 +379,7 @@ const ProfilePage = () => {
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-gray-500">Nie masz jeszcze żadnych ogłoszeń. Dodaj pierwsze!</p>
+                                    null
                                 )}
                             </div>
                         </div>
