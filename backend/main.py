@@ -163,12 +163,31 @@ def create_ad(ad: Ad, session: Session = Depends(get_session)):
 
 @app.get("/ads/user/{user_id}")
 def get_ads_by_user(user_id: int, session: Session = Depends(get_session)):
-    ads = session.exec(
-        select(Ad)
-        .join(BusinessProfile, Ad.business_profile)  # lub .join(BusinessProfile, Ad.bp_id == BusinessProfile.bp_id)
-        .where(BusinessProfile.user_id == user_id)
-    ).all()
-    return ads
+    try:
+        # 1. Znajdź firmy użytkownika
+        businesses = session.exec(
+            select(BusinessProfile).where(BusinessProfile.user_id == user_id)
+        ).all()
+
+        if not businesses:
+            return []
+
+        # 2. Zbierz ID firm
+        business_ids = [b.bp_id for b in businesses]
+        print(business_ids)
+        # 3. Pobierz ogłoszenia dla każdej firmy po kolei
+        all_ads = []
+        for bp_id in business_ids:
+            ads_for_business = session.exec(
+                select(Ad).where(Ad.bp_id == bp_id)
+            ).all()
+            all_ads.extend(ads_for_business)
+        print(all_ads)
+        return all_ads
+
+    except Exception as e:
+        print(f"Błąd w get_ads_by_user: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Błąd pobierania ogłoszeń: {str(e)}")
 
 @app.get("/ads", response_model=List[Ad])
 def get_all_ads(session: Session = Depends(get_session)):

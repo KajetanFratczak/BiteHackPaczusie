@@ -300,13 +300,13 @@ const ProfilePage = () => {
                             <div className="grid gap-4">
                                 {businesses.length > 0 ? (
                                     businesses.map(business => (
-                                        <div key={business.pb_id} className="bg-white rounded shadow p-6">
+                                        <div key={business.bp_id} className="bg-white rounded shadow p-6">
                                             <h3 className="text-xl font-bold text-[#233D4D]">{business.bp_name}</h3>
                                             <p className="text-gray-600">{business.description}</p>
                                             <p className="text-gray-500 text-sm mt-2">📍 {business.address}</p>
                                             <p className="text-gray-500 text-sm">📞 {business.phone}</p>
                                             <button
-                                                onClick={() => handleDeleteBusiness(business.pb_id)}
+                                                onClick={() => handleDeleteBusiness(business.bp_id)}
                                                 className="mt-4 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
                                             >
                                                 Usuń
@@ -359,7 +359,7 @@ const ProfilePage = () => {
                                                 >
                                                     <option value="">Wybierz Firmę *</option>
                                                     {businesses.map(b => (
-                                                        <option key={b.pb_id} value={b.pb_id}>{b.bp_name}</option>
+                                                        <option key={b.bp_id} value={b.bp_id}>{b.bp_name}</option>
                                                     ))}
                                                 </select>
                                             </div>
