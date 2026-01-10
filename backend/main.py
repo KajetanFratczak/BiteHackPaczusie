@@ -5,11 +5,12 @@ from typing import List, Optional
 
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from sqlmodel import Session, select, col
+from sqlmodel import Session, select
 from database.database import create_db_and_tables, get_session
 from database.models import User, BusinessProfile, Categories, Ad, AdCategory
 from schemas import Token, UserCreate, UserRead
 import security
+
 
 app = FastAPI()
 
@@ -91,6 +92,13 @@ def get_user(user_id: int, session: Session = Depends(get_session)):
     user = session.get(User, user_id)
     return user
 
+@app.get("/businesses/user/{user_id}")
+def get_businesses_by_user(user_id: int, session: Session = Depends(get_session)):
+    businesses = session.exec(
+        select(BusinessProfile).where(BusinessProfile.user_id == user_id)
+    ).all()
+    return businesses
+
 @app.put("/users/{user_id}", response_model=User)
 def update_user(user_id: int, updated_user: User, session: Session = Depends(get_session)):
     db_user = session.get(User, user_id)
@@ -142,53 +150,87 @@ def delete_business(bp_id: int, session: Session = Depends(get_session)):
     return
 
 #AD CRUD
+# Endpoint do tworzenia ogłoszenia
 @app.post("/ads", response_model=Ad)
 def create_ad(ad: Ad, session: Session = Depends(get_session)):
+    # Zawsze ustaw status na False przy tworzeniu
+    ad.status = False
     session.add(ad)
     session.commit()
     session.refresh(ad)
     return ad
 
+
+@app.get("/ads/user/{user_id}")
+def get_ads_by_user(user_id: int, session: Session = Depends(get_session)):
+    ads = session.exec(
+        select(Ad)
+        .join(BusinessProfile, Ad.business_profile)  # lub .join(BusinessProfile, Ad.bp_id == BusinessProfile.bp_id)
+        .where(BusinessProfile.user_id == user_id)
+    ).all()
+    return ads
+
 @app.get("/ads", response_model=List[Ad])
-def get_all_ads(
-    session: Session = Depends(get_session),
-    category_id: Optional[int] = None,
-    search: Optional[str] = None
-):
-    statement = select(Ad)
-    
-    # Jeśli wybrano kategorię, dołączamy tabelę łączącą i filtrujemy
-    if category_id:
-        statement = statement.join(AdCategory).where(AdCategory.category_id == category_id)
-    
-    # Wyszukiwanie tekstowe
-    if search:
-        statement = statement.where(
-            (col(Ad.ad_title).contains(search)) | (col(Ad.description).contains(search))
-        )
-    
-    return session.exec(statement).all()
+def get_all_ads(session: Session = Depends(get_session)):
+    return session.exec(select(Ad)).all()
+
 
 @app.get("/ads/{ad_id}")
 def get_ad(ad_id: int, session: Session = Depends(get_session)):
-    return session.get(Ad, ad_id)
+    ad = session.get(Ad, ad_id)
+    if not ad:
+        raise HTTPException(status_code=404, detail="Ogłoszenie nie znalezione")
+    return ad
+
 
 @app.put("/ads/{ad_id}")
 def update_ad(ad_id: int, updated_ad: Ad, session: Session = Depends(get_session)):
     db_ad = session.get(Ad, ad_id)
-    for key, value in updated_ad.dict().items():
+    if not db_ad:
+        raise HTTPException(status_code=404, detail="Ogłoszenie nie znalezione")
+
+    # Aktualizuj tylko pola, które są podane w requeście
+    # Możesz dodać zabezpieczenie przed zmianą statusu dla nie-adminów
+    update_data = updated_ad.dict(exclude_unset=True)
+    for key, value in update_data.items():
         setattr(db_ad, key, value)
+
     session.add(db_ad)
     session.commit()
     session.refresh(db_ad)
     return db_ad
 
+
 @app.delete("/ads/{ad_id}")
 def delete_ad(ad_id: int, session: Session = Depends(get_session)):
-    ad_bp = session.get(Ad, ad_id)
-    session.delete(ad_bp)
+    ad = session.get(Ad, ad_id)
+    if not ad:
+        raise HTTPException(status_code=404, detail="Ogłoszenie nie znalezione")
+    session.delete(ad)
     session.commit()
-    return
+    return {"message": "Ogłoszenie usunięte pomyślnie"}
+
+
+@app.get("/ads/pending")
+def get_pending_ads(session: Session = Depends(get_session)):
+    return session.exec(select(Ad).where(Ad.status == False)).all()
+
+
+@app.get("/ads/status/{status}")
+def get_ads_by_status(status: bool, session: Session = Depends(get_session)):
+    return session.exec(select(Ad).where(Ad.status == status)).all()
+
+
+@app.patch("/ads/{ad_id}/approve")
+def approve_ad(ad_id: int, session: Session = Depends(get_session)):
+    ad = session.get(Ad, ad_id)
+    if not ad:
+        raise HTTPException(status_code=404, detail="Ogłoszenie nie znalezione")
+    ad.status = True
+    session.add(ad)
+    session.commit()
+    session.refresh(ad)
+    return ad
 
 
 #Categories CRUD
