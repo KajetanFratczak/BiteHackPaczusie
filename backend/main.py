@@ -13,6 +13,7 @@ class Fruits(BaseModel):
     fruits: List[Fruit]
 
 
+
 app = FastAPI(debug=True)
 
 origins = [
@@ -30,6 +31,9 @@ app.add_middleware(
 
 memory_db = {"fruits": []}
 
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
 
 @app.get("/fruits", response_model=Fruits)
 def get_fruits():
