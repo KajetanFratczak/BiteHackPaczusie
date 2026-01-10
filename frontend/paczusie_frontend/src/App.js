@@ -17,7 +17,7 @@ function App() {
           {/* Strona Główna */}
           <Route path="/" element={<HomePage />} />  
           {/* Szczegóły ogłoszenia */}
-          <Route path="/ad" element={<AdPage />} />  
+          <Route path="/ads/:id" element={<AdPage /> } />    
           {/* Strona logowania  */}
           <Route path="/login" element={<LoginPage />} />
           {/* Strona rejestracji  */}
@@ -31,7 +31,9 @@ function App() {
           {/* Potrzebujemy jeszcze strony profilu biznesu */}
           <Route path="/profile" element={<ProtectedRoute requiredRoles={['business_owner']}><ProfilePage /></ProtectedRoute>} />
 
-          <Route path="/cos" element={<AdminPage />} />
+          {/* test routes */}
+          {/* <Route path="/cos" element={<AdminPage />} />
+          <Route path="/cos2" element={<ProfilePage />} /> */}
         </Routes>
       </AuthProvider>
     </BrowserRouter>

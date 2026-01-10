@@ -219,11 +219,10 @@ def create_ad_category(ad_category: AdCategory, session: Session = Depends(get_s
 def get_all_ad_categories(session: Session = Depends(get_session)):
     return session.exec(select(AdCategory)).all()
 
-@app.get("/ad_categories/{ad_id}/{category_id}")
-def get_ad_category(category_id: int, ad_id: int,  session: Session = Depends(get_session)):
-    category = session.get(AdCategory, (ad_id, category_id))
-    return category
-
+@app.get("/ad_categories/{ad_id}")
+def get_ad_category(ad_id: int,  session: Session = Depends(get_session)):
+    categories = session.get(AdCategory, ad_id)
+    return categories
 
 @app.put("/ad_categories/{ad_id}/{category_id}", response_model=AdCategory)
 def update_ad_category(category_id: int, ad_id: int, updated_ad_category: AdCategory, session: Session = Depends(get_session)):
