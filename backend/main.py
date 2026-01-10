@@ -221,6 +221,15 @@ def create_ad_category(ad_category: AdCategory, session: Session = Depends(get_s
 def get_all_ad_categories(session: Session = Depends(get_session)):
     return session.exec(select(AdCategory)).all()
 
+
+@app.get("/ad_categories/by_ad/{ad_id}")
+def get_ad_categories_by_ad(ad_id: int, session: Session = Depends(get_session)):
+    return session.exec(select(AdCategory).where(AdCategory.ad_id == ad_id)).all()
+
+@app.get("/ad_categories/by_category/{category_id}")
+def get_ad_categories_by_category(category_id: int, session: Session = Depends(get_session)):
+    return session.exec(select(AdCategory).where(AdCategory.category_id == category_id)).all()
+
 @app.get("/ad_categories/{ad_id}/{category_id}")
 def get_ad_category(category_id: int, ad_id: int,  session: Session = Depends(get_session)):
     category = session.get(AdCategory, (ad_id, category_id))
