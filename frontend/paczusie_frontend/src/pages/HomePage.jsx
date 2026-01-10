@@ -2,37 +2,58 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import AdCard from '../components/AdCard';
 import FloatingLogger from '../components/FloatingLogger';
+import api from '../services/api';
 
 const HomePage = () => {
-  const [ads, setAds] = useState([
-    { id: 1, title: "Domowe dżemy truskawkowe", price: 15, location: "Kraków", description: "Pyszne, bez konserwantów." },
-    { id: 2, title: "Naprawa rowerów", price: 50, location: "Warszawa", description: "Szybko i tanio, dojazd do klienta." },
-    { id: 3, title: "Korepetycje z matematyki", price: 40, location: "Online", description: "Szkoła podstawowa i liceum." },
-    { id: 4, title: "Sprzedam miód lipowy", price: 35, location: "Poznań", description: "Z własnej pasieki, rocznik 2025." },
-    { id: 5, title: "Usługi hydrauliczne", price: 100, location: "Gdańsk", description: "Awaryjne otwieranie rur." },
-    { id: 6, title: "Usługi fryzjerskie", price: 200, location: "Gdańsk", description: "..." },
-  ]);
+  const [ads, setAds] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAds = async () => {
+      try {
+        const response = await api.get('/ads');
+        const formattedAds = response.data.map(ad => ({
+          id: ad.ad_id,
+          title: ad.ad_title,
+          description: ad.description,
+        }));
+        setAds(formattedAds);
+      } catch (error) {
+        console.error('Błąd pobierania ogłoszeń: ', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAds(); 
+  }, []);
 
   return (
 
-    <div className="pb-80 bg-[#f4f4f4] min-h-screen">
+    <div className="pb-80 bg-[#F5FBE6] min-h-screen">
       <Navbar />
       
-      <div className="p-12 text-center text-3xl font-bold">
-        <h2>Gorące biznesy w Twojej okolicy!!!!</h2>
+      <div className="p-12 text-center text-3xl font-bold text-[#233D4D]">
+        <h2>Nowości</h2>
       </div>
 
-      <div className="grid grid-cols-2 max-[800px]:grid-cols-1 gap-[20px] p-[20px] max-w-[1500px] mx-auto">
-        {ads.map((ad) => (
-          <AdCard 
-            key={ad.id}
-            title={ad.title}
-            price={ad.price}
-            location={ad.location}
-            description={ad.description}
-          />
-        ))}
-      </div>
+      {loading ? (
+          <p className="text-center mt-10">Ładowanie ofert...</p>
+      ) : (
+          <div className="grid grid-cols-2 max-[800px]:grid-cols-1 gap-[20px] p-[20px] max-w-[1500px] mx-auto">
+            {ads.length > 0 ? (
+                ads.map((ad) => (
+                <AdCard 
+                    key={ad.id}
+                    title={ad.title}
+                    description={ad.description}
+                />
+                ))
+            ) : (
+                <p className="text-center col-span-2">Brak ogłoszeń. Dodaj pierwsze!</p>
+            )}
+          </div>
+      )}
 
       <FloatingLogger />
     </div>
