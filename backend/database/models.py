@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, Column, JSON
+from typing import List
 
 class User(SQLModel, table=True):
     user_id: int | None = Field(default=None, primary_key=True)
@@ -15,7 +16,7 @@ class User(SQLModel, table=True):
 
 
 class BusinessProfile(SQLModel, table=True):
-    pb_id: int | None = Field(default=None, primary_key=True)
+    bp_id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(nullable=False, foreign_key="user.user_id")
     bp_name: str = Field(nullable=False)
     description: Optional[str] = None
@@ -38,8 +39,9 @@ class Categories(SQLModel, table=True):
 class Ad(SQLModel, table=True):
     ad_id: int | None = Field(default=None, primary_key=True)
     ad_title: str = Field(nullable=False)
-    bp_id: int = Field(nullable=False, foreign_key="businessprofile.pb_id")
+    bp_id: int = Field(nullable=False, foreign_key="businessprofile.bp_id")
     description: Optional[str] = None
+    images: List[str] = Field(sa_column=Column(JSON, nullable=False))
     price: int = Field(nullable=False)
     address: str = Field(nullable=False)
     post_date: str
