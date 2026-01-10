@@ -11,3 +11,4 @@ python-multipart
 sqlmodel
 datetime
 email-validator
+argon2-cffi

@@ -7,6 +7,7 @@ import api from '../services/api';
 const HomePage = () => {
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
+  const loggged = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchAds = async () => {
@@ -55,8 +56,9 @@ const HomePage = () => {
             )}
           </div>
       )}
-
+      { loggged ?
       <FloatingLogger />
+      : null }
     </div>
   );
 };
