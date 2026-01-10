@@ -8,7 +8,6 @@ import ProfilePage from './pages/ProfilePage';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
-import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
