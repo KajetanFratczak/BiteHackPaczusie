@@ -1,15 +1,16 @@
+import { BrowserRouter, Route, Routes } from 'react-router';
 import './App.css';
-import { runTest } from './services/testService';
+import HomePage from './pages/HomePage';
+import AdPage from './pages/AdPage';
 
 function App() {
-  runTest().then(data => {
-          console.log(data);
-        });
   return (
-    <div className="App">
-      <h1>Welcome to Paczusie Frontend!</h1>
-     
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />  
+        <Route path="/ad" element={<AdPage />} />    
+      </Routes>
+    </BrowserRouter>
   );
 }
 
