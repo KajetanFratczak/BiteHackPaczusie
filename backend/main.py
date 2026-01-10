@@ -117,7 +117,7 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
     return  # 204 No Content
 
 #Business CRUD
-@app.post("/businesess", response_model=BusinessProfile)
+@app.post("/businesses", response_model=BusinessProfile)
 def create_business(business: BusinessProfile, session: Session = Depends(get_session)):
     session.add(business)
     session.commit()
