@@ -6,6 +6,8 @@ import LoginPage from './pages/LoginPage';
 import AdminPage from './pages/AdminPage';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
           <Route path="/ad" element={<AdPage />} />  
           {/* Strona logowania  */}
           <Route path="/login" element={<LoginPage />} />
+          {/* Strona rejestracji  */}
+          <Route path="/register" element={<RegisterPage />} />
 
           {/* Protected Routes - dla admina oraz lokalnych przedsiębiorców */}
           
