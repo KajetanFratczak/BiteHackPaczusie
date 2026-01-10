@@ -10,3 +10,4 @@ python-decouple
 python-multipart
 sqlmodel
 datetime
+email-validator

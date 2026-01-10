@@ -2,6 +2,9 @@ import uvicorn
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
+
+from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel
 from sqlmodel import Session, select
 from database.database import create_db_and_tables, get_session
 from database.models import User, BusinessProfile, Categories, Ad, AdCategory
@@ -25,15 +28,51 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+# AUTH ENDPOINTS
+@app.post("/register", response_model=UserRead)
+def register(user_data: UserCreate, session: Session = Depends(get_session)):
+
+    existing = session.exec(select(User).where(User.email == user_data.email)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    new_user = User(
+        first_name=user_data.first_name,
+        last_name=user_data.last_name,
+        email=user_data.email,
+        hashed_password=security.hash_password(user_data.password),
+        role = "user"
+    )
+
+    session.add(new_user)
+    session.commit()
+    session.refresh(new_user)
+    return new_user
+
+
+@app.get("/me")
+async def read_me(current_user: User = Depends(security.get_current_user)):
+    return current_user
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@app.post("/login", response_model=Token)
+def login(request: LoginRequest, session: Session = Depends(get_session)):
+    user = session.exec(select(User).where(User.email == request.email)).first()
+
+    if not user or not security.verify_password(request.password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+
+    token = security.create_access_token({"sub": str(user.user_id)})
+
+    return {"access_token": token, "token_type": "bearer"}
 
 @app.post("/users")
-def create_user(
-    user: User,
-    session: Session = Depends(get_session)
-):
+def create_user(user: User, session: Session = Depends(get_session)):
+    user.hashed_password = security.hash_password(user.hashed_password)
     session.add(user)
     session.commit()
     session.refresh(user)
@@ -184,6 +223,7 @@ def get_all_ad_categories(session: Session = Depends(get_session)):
 def get_ad_category(category_id: int, ad_id: int,  session: Session = Depends(get_session)):
     category = session.get(AdCategory, (ad_id, category_id))
     return category
+
 
 @app.put("/ad_categories/{ad_id}/{category_id}", response_model=AdCategory)
 def update_ad_category(category_id: int, ad_id: int, updated_ad_category: AdCategory, session: Session = Depends(get_session)):
