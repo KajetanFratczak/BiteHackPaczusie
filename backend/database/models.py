@@ -42,7 +42,7 @@ class Ad(SQLModel, table=True):
     bp_id: int = Field(nullable=False, foreign_key="businessprofile.bp_id")
     description: Optional[str] = None
     images: List[str] = Field(sa_column=Column(JSON, nullable=False))
-    price: int = Field(nullable=False)
+    price: str = Field(nullable=False)
     address: str = Field(nullable=False)
     post_date: str
     due_date: str
