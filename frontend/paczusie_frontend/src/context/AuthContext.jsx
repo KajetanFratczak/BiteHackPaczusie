@@ -62,10 +62,30 @@ export const AuthProvider = ({children}) => {
         setUser(null);
     };
 
-    // const register... tba
+    const register = async (firstName, lastName, email, password) => {
+        try{
+            const response = await authService.register({
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                password: password,
+                role: "business_owner"
+            });
+            if (response.token){
+                const success = await fetchAndSetUser();
+                if (success){
+                    return {success: true, msg: "Rejestracja pomyślna."};
+                }
+            }
+        } catch (error){
+            console.log(error);
+            return {success: false, msg: "Błąd podczas rejestracji."};
+        }
+        return {success: false, msg: "Nie udało się zarejestrować użytkownika."};
+    };
 
     return (
-        <AuthContext.Provider value={{user, loading, login, logout}}>
+        <AuthContext.Provider value={{user, loading, login, logout, register}}>
             {children}
         </AuthContext.Provider>
     );
