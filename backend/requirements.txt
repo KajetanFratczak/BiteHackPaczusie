@@ -8,3 +8,5 @@ passlib[bcrypt]
 PyJWT
 python-decouple
 python-multipart
+sqlmodel
+datetime
