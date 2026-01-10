@@ -45,6 +45,7 @@ const HomePage = () => {
                 ads.map((ad) => (
                 <AdCard 
                     key={ad.id}
+                    id={ad.id}
                     title={ad.title}
                     description={ad.description}
                 />

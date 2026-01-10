@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { use } from 'react';
+import { useNavigate } from 'react-router';
 
-const AdCard = ({ title, description }) => {
+const AdCard = ({ id, title, description }) => {
+  const navigate = useNavigate();
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-transform duration-200 flex flex-col hover:-translate-y-[5px]">
+    <div className="bg-white rounded-lg overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-transform duration-200 flex flex-col hover:-translate-y-[5px]"
+         onClick={() => navigate(`/ads/${id}`)}>
       
       <div className="h-[150px] bg-[#ddd] flex items-center justify-center text-[#888] font-bold">IMG</div>
 

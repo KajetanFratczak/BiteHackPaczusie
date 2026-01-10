@@ -17,7 +17,7 @@ function App() {
           {/* Strona Główna */}
           <Route path="/" element={<HomePage />} />  
           {/* Szczegóły ogłoszenia */}
-          <Route path="/ad" element={<AdPage />} />  
+          <Route path="/ads/:id" element={<AdPage /> } />  
           {/* Strona logowania  */}
           <Route path="/login" element={<LoginPage />} />
           {/* Strona rejestracji  */}
