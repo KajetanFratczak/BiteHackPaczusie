@@ -55,12 +55,12 @@ const RegisterPage = () => {
     return (
         <div className='max-h-screen'>
             <Navbar/>
-            <div className="bg-[#1e1e1e] min-h-screen flex justify-center items-center p-4">
-                <div className="bg-[#2a2a2a] p-8 rounded shadow-md w-full max-w-md text-white">
-                    <h2 className="text-2xl mb-6 font-bold">
+            <div className="bg-[#F5FBE6] min-h-screen flex justify-center items-center p-4">
+                <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+                    <h2 className="text-2xl mb-6 font-bold text-[#2C3E50]">
                         Rejestracja
                     </h2>
-                    {error && (<div className="bg-red-600 text-white p-2 rounded mb-4">{error}</div>)}
+                    {error && (<div className="bg-red-500 text-white p-3 rounded mb-4">{error}</div>)}
                     <input 
                         type="text" 
                         placeholder="Imię"
@@ -68,7 +68,7 @@ const RegisterPage = () => {
                         label="Imię"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full mb-4 p-2 rounded bg-[#3a3a3a] border border-[#555] text-white"
+                        className="w-full mb-4 p-2 rounded bg-[#F8F9FA] border border-[#DFE4EA] text-[#2C3E50] focus:border-[#619B8A] focus:outline-none"
                     />
                     <input 
                         type="text" 
@@ -77,7 +77,7 @@ const RegisterPage = () => {
                         label="Nazwisko"
                         value={surname}
                         onChange={(e) => setSurname(e.target.value)}
-                        className="w-full mb-4 p-2 rounded bg-[#3a3a3a] border border-[#555] text-white"
+                        className="w-full mb-4 p-2 rounded bg-[#F8F9FA] border border-[#DFE4EA] text-[#2C3E50] focus:border-[#619B8A] focus:outline-none"
                     />
                     <input
                         type="email"
@@ -86,27 +86,27 @@ const RegisterPage = () => {
                         label="Adres Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full mb-4 p-2 rounded bg-[#3a3a3a] border border-[#555] text-white"
+                        className="w-full mb-4 p-2 rounded bg-[#F8F9FA] border border-[#DFE4EA] text-[#2C3E50] focus:border-[#619B8A] focus:outline-none"
                     />
                     <input
                         type="password"
                         placeholder="Hasło"                                                                  
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full mb-4 p-2 rounded bg-[#3a3a3a] border border-[#555] text-white"
+                        className="w-full mb-4 p-2 rounded bg-[#F8F9FA] border border-[#DFE4EA] text-[#2C3E50] focus:border-[#619B8A] focus:outline-none"
                     />
                     <input
                         type="password"
                         placeholder="Powtórz hasło"                                                                  
                         value={password2}
                         onChange={(e) => setPassword2(e.target.value)}
-                        className="w-full mb-4 p-2 rounded bg-[#3a3a3a] border border-[#555] text-white"
+                        className="w-full mb-4 p-2 rounded bg-[#F8F9FA] border border-[#DFE4EA] text-[#2C3E50] focus:border-[#619B8A] focus:outline-none"
                     />
-                    <button className="w-full py-2 px-4 rounded bg-[#646cff] hover:bg-[#535bf2] text-white font-bold" onClick={handleRegister}>
+                    <button className="w-full py-3 px-4 rounded-lg bg-[#619B8A] hover:bg-[#4E8275] text-white font-bold transition-colors mb-3" onClick={handleRegister}>
                         Zarejestruj się
                     </button>
                     <Link to="/">
-                        <button className="w-full py-2 px-4 rounded text-[#aaa] bg-transparent hover:text-white font-bold">
+                        <button className="w-full py-3 px-4 rounded-lg text-[#619B8A] bg-transparent hover:bg-[#F8F9FA] font-bold transition-colors">
                             Powrót do strony głównej
                         </button>
                     </Link>
