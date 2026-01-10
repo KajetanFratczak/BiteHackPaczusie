@@ -1,8 +1,8 @@
 import api from './api';
 
 export const adService = {
-    async getAll() {
-        const response = await api.get('/ads');
+    async getAll(params = {}) {
+        const response = await api.get('/ads', { params });
         return response.data;
     },
 

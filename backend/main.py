@@ -1,11 +1,11 @@
 import uvicorn
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List
+from typing import List, Optional
 
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import Session, select, col
 from database.database import create_db_and_tables, get_session
 from database.models import User, BusinessProfile, Categories, Ad, AdCategory
 from schemas import Token, UserCreate, UserRead
@@ -150,8 +150,24 @@ def create_ad(ad: Ad, session: Session = Depends(get_session)):
     return ad
 
 @app.get("/ads", response_model=List[Ad])
-def get_all_ads(session: Session = Depends(get_session)):
-    return session.exec(select(Ad)).all()
+def get_all_ads(
+    session: Session = Depends(get_session),
+    category_id: Optional[int] = None,
+    search: Optional[str] = None
+):
+    statement = select(Ad)
+    
+    # Jeśli wybrano kategorię, dołączamy tabelę łączącą i filtrujemy
+    if category_id:
+        statement = statement.join(AdCategory).where(AdCategory.category_id == category_id)
+    
+    # Wyszukiwanie tekstowe
+    if search:
+        statement = statement.where(
+            (col(Ad.ad_title).contains(search)) | (col(Ad.description).contains(search))
+        )
+    
+    return session.exec(statement).all()
 
 @app.get("/ads/{ad_id}")
 def get_ad(ad_id: int, session: Session = Depends(get_session)):
