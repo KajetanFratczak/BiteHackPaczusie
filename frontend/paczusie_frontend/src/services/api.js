@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // adres serwera do podmianki, jeśli się zmieni
-export const API_URL = "http://localhost:8080/api";
+export const API_URL = "http://localhost:8000";
 
 const api = axios.create({
     baseURL: API_URL,
