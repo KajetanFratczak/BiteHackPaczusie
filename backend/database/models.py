@@ -39,7 +39,7 @@ class Ad(SQLModel, table=True):
     ad_id: int | None = Field(default=None, primary_key=True)
     ad_title: str = Field(nullable=False)
     bp_id: int = Field(nullable=False, foreign_key="businessprofile.pb_id")
-    category_id: int = Field(nullable=False, foreign_key="category.category_id")
+    category_id: int = Field(nullable=False, foreign_key="categories.category_id")
     description: Optional[str] = None
     post_date: str
     due_date: str
