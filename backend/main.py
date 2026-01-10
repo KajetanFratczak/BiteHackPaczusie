@@ -94,7 +94,7 @@ def get_user(user_id: int, session: Session = Depends(get_session)):
 @app.put("/users/{user_id}", response_model=User)
 def update_user(user_id: int, updated_user: User, session: Session = Depends(get_session)):
     db_user = session.get(User, user_id)
-    for key, value in updated_user.dict().items():
+    for key, value in updated_user.dict(exclude_unset=True).items():
         setattr(db_user, key, value)
     session.add(db_user)
     session.commit()
