@@ -11,19 +11,20 @@ export const AuthProvider = ({children}) => {
         try{
             const userData = await authService.getCurrentUser();
             if (userData){
-                setUser({
+                const mappedUser = {
                     id: userData.user_id,
                     firstName: userData.first_name,
                     lastName: userData.last_name,
                     login: userData.email,
                     role: userData.role
-                });
-                return true;
+                };
+                setUser(mappedUser);
+                return mappedUser;
             }
         } catch (error){
             console.log(error);
         }
-        return false;
+        return null;
     };
 
     // przy starcie aplikacji sprawdzam, czy w localStorage jest token i user
@@ -44,10 +45,10 @@ export const AuthProvider = ({children}) => {
         try{
             const response = await authService.login(email, password);
             if (response.access_token){
-                const success = await fetchAndSetUser();
+                const loggedInUser = await fetchAndSetUser();
 
-                if (success){
-                    return {success: true, msg: "Logowanie pomyślne."};
+                if (loggedInUser){
+                    return {success: true, role: loggedInUser.role, msg: "Logowanie pomyślne."};
                 } 
             }
         } catch (error){

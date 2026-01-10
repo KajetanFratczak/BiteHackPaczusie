@@ -24,7 +24,12 @@ export const companyService = {
     async delete(businessId) {
         const response = await api.delete(`/businesses/${businessId}`);
         return response.data;
-    }
+    },
+
+    async getByUserId(userId) {
+    const response = await api.get(`/businesses/user/${userId}`);
+    return response.data;
+}
 };
 
 export default companyService;
