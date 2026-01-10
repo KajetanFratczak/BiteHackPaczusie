@@ -43,7 +43,7 @@ def register(user_data: UserCreate, session: Session = Depends(get_session)):
         last_name=user_data.last_name,
         email=user_data.email,
         hashed_password=security.hash_password(user_data.password),
-        role = "user"
+        role = "business_owner"
     )
 
     session.add(new_user)

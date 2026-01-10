@@ -12,10 +12,10 @@ export const AuthProvider = ({children}) => {
             const userData = await authService.getCurrentUser();
             if (userData){
                 setUser({
-                    id: userData.id,
-                    firstName: userData.firstName,
-                    lastName: userData.lastName,
-                    login: userData.login,
+                    id: userData.user_id,
+                    firstName: userData.first_name,
+                    lastName: userData.last_name,
+                    login: userData.email,
                     role: userData.role
                 });
                 return true;
@@ -40,10 +40,10 @@ export const AuthProvider = ({children}) => {
         initUser();
     }, []);
 
-    const login = async (login, password) => {
+    const login = async (email, password) => {
         try{
-            const response = await authService.login(login, password);
-            if (response.token){
+            const response = await authService.login(email, password);
+            if (response.access_token){
                 const success = await fetchAndSetUser();
 
                 if (success){
@@ -71,18 +71,16 @@ export const AuthProvider = ({children}) => {
                 password: password,
                 role: "business_owner"
             });
-            if (response.token){
-                const success = await fetchAndSetUser();
-                if (success){
-                    return {success: true, msg: "Rejestracja pomyślna."};
-                }
-            }
-        } catch (error){
-            console.log(error);
-            return {success: false, msg: "Błąd podczas rejestracji."};
-        }
-        return {success: false, msg: "Nie udało się zarejestrować użytkownika."};
-    };
+            return { success: true, msg: "Rejestracja pomyślna. Zaloguj się." };
+                
+        } catch (error) {
+            console.error("Błąd rejestracji:", error);
+            return { 
+                success: false, 
+                msg: error.response?.data?.detail || "Błąd podczas rejestracji." 
+            };
+    }
+};
 
     return (
         <AuthContext.Provider value={{user, loading, login, logout, register}}>

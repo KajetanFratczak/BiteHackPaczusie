@@ -69,7 +69,7 @@ const LoginPage = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="w-full mb-4 p-2 rounded bg-[#F8F9FA] border border-[#DFE4EA] text-[#2C3E50] focus:border-[#619B8A] focus:outline-none"                    />
-                    <button className="w-full py-2 px-4 rounded bg-[#646cff] hover:bg-[#535bf2] text-white font-bold" onClick={handleLogin}>
+                    <button className="w-full py-2 px-4 rounded bg-[#619B8A] hover:bg-[#4E8275] text-white font-bold" onClick={handleLogin}>
                         Zaloguj się
                     </button>
                     <h3 className="w-full py-3 px-4 rounded-lg text-[#619B8A] bg-transparent hover:bg-[#F8F9FA] font-bold transition-colors mb-3 text-center">
