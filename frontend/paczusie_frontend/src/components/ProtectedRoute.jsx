@@ -5,9 +5,9 @@ import { Navigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 
 const ProtectedRoute = ({ children, requiredRoles }) => {
-    const { user, isLoading } = useAuth();
+    const { user, loading } = useAuth();
 
-    if (isLoading) {
+    if (loading) {
         return <div>Ładowanie autoryzacji...</div>;
     }
 

@@ -31,7 +31,9 @@ function App() {
           {/* Potrzebujemy jeszcze strony profilu biznesu */}
           <Route path="/profile" element={<ProtectedRoute requiredRoles={['business_owner']}><ProfilePage /></ProtectedRoute>} />
 
-          <Route path="/cos" element={<AdminPage />} />
+          {/* test routes */}
+          {/* <Route path="/cos" element={<AdminPage />} />
+          <Route path="/cos2" element={<ProfilePage />} /> */}
         </Routes>
       </AuthProvider>
     </BrowserRouter>
