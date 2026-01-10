@@ -62,7 +62,7 @@ const AdPage = () => {
                             <InfoRow label="Termin wygaśnięcia" value={ad.due_date} />
                             <InfoRow 
                                 label="Status" 
-                                value={ad.status ? "Aktywne" : "Zakończone"} 
+                                value={ad.status ? "Aktywne" : "Niezatwierdzone"} 
                                 isStatus 
                                 statusValue={ad.status}
                             />
@@ -95,7 +95,7 @@ const InfoRow = ({ label, value, isStatus, statusValue }) => (
     <div className="flex justify-between items-center py-1">
         <span className="text-sm text-gray-500">{label}:</span>
         {isStatus ? (
-            <span className={`text-xs font-bold px-2 py-1 rounded ${statusValue ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            <span className={`text-xs font-bold px-2 py-1 rounded ${statusValue ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                 {value}
             </span>
         ) : (

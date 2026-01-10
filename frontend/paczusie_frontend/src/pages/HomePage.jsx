@@ -5,7 +5,6 @@ import FloatingLogger from '../components/FloatingLogger';
 import api from '../services/api';
 import { adService } from '../services/adService';
 import { categoryService } from '../services/categoryService';
-import { set } from 'mongoose';
 
 const HomePage = () => {
   const [ads, setAds] = useState([]);
