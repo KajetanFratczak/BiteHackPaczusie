@@ -27,6 +27,8 @@ const ProfilePage = () => {
         description: '',
         bp_id: '',
         category_id: '',
+        price: '',
+        address: '',
         post_date: new Date().toISOString().split('T')[0],
         due_date: '',
         status: true
@@ -76,6 +78,8 @@ const ProfilePage = () => {
                 description: '',
                 bp_id: '',
                 category_id: '',
+                price: '',
+                address: '',
                 post_date: new Date().toISOString().split('T')[0],
                 due_date: '',
                 status: true
@@ -316,6 +320,22 @@ const ProfilePage = () => {
                                             ))}
                                         </select>
                                         <input
+                                            type="number"
+                                            placeholder="Cena (zł)"
+                                            value={adData.price}
+                                            onChange={(e) => setAdData({...adData, price: parseInt(e.target.value)})}
+                                            className="w-full p-2 border border-gray-300 rounded"
+                                            required
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Adres"
+                                            value={adData.address}
+                                            onChange={(e) => setAdData({...adData, address: e.target.value})}
+                                            className="w-full p-2 border border-gray-300 rounded"
+                                            required
+                                        />
+                                        <input
                                             type="date"
                                             value={adData.due_date}
                                             onChange={(e) => setAdData({...adData, due_date: e.target.value})}
@@ -347,6 +367,8 @@ const ProfilePage = () => {
                                         <div key={ad.ad_id} className="bg-white rounded shadow p-6">
                                             <h3 className="text-xl font-bold text-[#233D4D]">{ad.ad_title}</h3>
                                             <p className="text-gray-600">{ad.description}</p>
+                                            <p className="text-gray-500 text-sm mt-2">📍 {ad.address}</p>
+                                            <p className="text-gray-500 text-sm">💰 Cena: {ad.price} zł</p>
                                             <p className="text-gray-500 text-sm mt-2">Termin: {ad.due_date}</p>
                                             <button
                                                 onClick={() => handleDeleteAd(ad.ad_id)}
