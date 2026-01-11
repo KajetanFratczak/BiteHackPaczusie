@@ -26,7 +26,7 @@ function App() {
           {/* Strona rejestracji  */}
           <Route path="/register" element={<RegisterPage />} />
 
-            <Route path="/business/:bp_id" element={<BusinessProfilePage />} />
+          <Route path="/business/:bp_id" element={<BusinessProfilePage />} />
 
           {/* Protected Routes - dla admina oraz lokalnych przedsiębiorców */}
 
