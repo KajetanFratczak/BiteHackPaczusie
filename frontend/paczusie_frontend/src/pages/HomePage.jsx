@@ -6,19 +6,24 @@ import api from '../services/api';
 import { adService } from '../services/adService';
 import { categoryService } from '../services/categoryService';
 
+
 const HomePage = () => {
   const [ads, setAds] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
 
+
+
   // filtrowanie
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
+
   useEffect(() => {
     categoryService.getAll().then(data => { setCategories(data); });
   }, []);
+
 
   useEffect(() => {
     const fetchAds = async () => {
@@ -31,17 +36,39 @@ const HomePage = () => {
         if (selectedCategory) {
           params.category_id = selectedCategory;
         }
-        const data = await adService.getAll(params);
+
+
+        const [adsData, categoriesData, linksData] = await Promise.all([
+          adService.getAll(params),
+          categoryService.getAll(),
+          api.get('/ad_categories').then(res => res.data)
+        ]);
+
 
         // tylko wyświetlamy zatwierdzone ogłoszenia
-        const approvedAds = data.filter(ad => ad.status === true);
+        const approvedAds = adsData.filter(ad => ad.status === true);
 
-        setAds(approvedAds.map(ad => ({
-          id: ad.ad_id,
-          title: ad.ad_title,
-          description: ad.description,
-          images: ad.images || []
-        })));
+
+        const mergedAds = approvedAds.map(ad => {
+          const relatedCategoryIds = linksData
+            .filter(link => link.ad_id === ad.ad_id)
+            .map(link => link.category_id);
+
+
+          const adCategoryNames = categoriesData
+            .filter(cat => relatedCategoryIds.includes(cat.category_id))
+            .map(cat => cat.category_name);
+
+
+          return {
+            id: ad.ad_id,
+            title: ad.ad_title,
+            description: ad.description,
+            categories: adCategoryNames,
+            images: ad.images || []
+          };
+        });
+        setAds(mergedAds);
       } catch (error) {
         console.error('Błąd pobierania ogłoszeń:', error);
       } finally {
@@ -49,16 +76,20 @@ const HomePage = () => {
       }
     };
 
-    fetchAds(); 
+
+    fetchAds();
   }, [searchTerm, selectedCategory]);
 
+
   return (
+
 
     <div className="pb-80 bg-[#F5FBE6] min-h-screen">
       <Navbar />
 
+
       <div className="max-w-[1200px] mx-auto p-6">
-        <div className="flex flex-col md:flex-row gap-4 mb-10 bg-white p-6 rounded-xl shadow-sm">
+        <div className="flex flex-col md:flex-row gap-4 mb-4 bg-white p-6 rounded-xl shadow-sm mt-6">
           <input
             type="text"
             placeholder="Wyszukaj ogłoszenie..."
@@ -86,12 +117,13 @@ const HomePage = () => {
           <div className="grid grid-cols-2 max-[800px]:grid-cols-1 gap-[20px] p-[20px] max-w-[1500px] mx-auto">
             {ads.length > 0 ? (
                 ads.map((ad) => (
-                <AdCard 
+                <AdCard
                     key={ad.id}
                     id={ad.id}
                     title={ad.title}
                     description={ad.description}
                     images={ad.images}
+                    categories={ad.categories}
                 />
                 ))
             ) : (
@@ -103,5 +135,6 @@ const HomePage = () => {
     </div>
   );
 };
+
 
 export default HomePage;
