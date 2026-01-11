@@ -4,13 +4,13 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session, select
-
+from decouple import config
 from database.database import get_session
 from database.models import User
 
-SECRET_KEY = "CHANGE_ME_IN_ENV"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+SECRET_KEY = config("SECRET_KEY")
+ALGORITHM = config("ALGORITHM", default="HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = config("ACCESS_TOKEN_EXPIRE_MINUTES", cast=int, default=60)
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 

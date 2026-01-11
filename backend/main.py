@@ -7,10 +7,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlmodel import Session, select, col
 from database.database import create_db_and_tables, get_session
-from database.models import User, BusinessProfile, Categories, Ad, AdCategory
+from database.models import User, BusinessProfile, Categories, Ad, AdCategory, Reviews
 from schemas import Token, UserCreate, UserRead
 import security
 from sqlalchemy import or_
+from decouple import config
 
 app = FastAPI()
 
@@ -20,9 +21,8 @@ def on_startup():
     create_db_and_tables()
 
 
-origins = [
-    "http://localhost:3000",
-]
+
+origins = config("CORS_ORIGINS").split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -417,10 +417,41 @@ def update_ad_category(category_id: int, ad_id: int, updated_ad_category: AdCate
     return db_ad_category
 
 
-@app.delete("/ad_categories/{ad_id}/{category_id}")  # asidbasidabsdihbasihdbasd
+@app.delete("/ad_categories/{ad_id}/{category_id}")
 def delete_ad_category(category_id: int, ad_id: int, session: Session = Depends(get_session)):
     db_category = session.get(AdCategory, (ad_id, category_id))
     session.delete(db_category)
+    session.commit()
+    return
+
+#Reviews CRUD
+@app.post("/reviews")
+def create_review(review: Reviews, session: Session = Depends(get_session)):
+    session.add(review)
+    session.commit()
+    session.refresh(review)
+    return review
+
+
+@app.get("/reviews")
+def get_all_reviews(session: Session = Depends(get_session)):
+    return session.exec(select(Reviews)).all()
+
+@app.put("/reviews/{review_id}", response_model=Reviews)
+def update_review(review_id: int, updated_review: Reviews, session: Session = Depends(get_session)):
+    db_review = session.get(Reviews, review_id)
+    for key, value in updated_review.dict().items():
+        setattr(db_review, key, value)
+    session.add(db_review)
+    session.commit()
+    session.refresh(db_review)
+    return db_review
+
+
+@app.delete("/reviews/{review_id}")
+def delete_review(review_id: int,session: Session = Depends(get_session)):
+    db_review = session.get(Reviews, review_id)
+    session.delete(db_review)
     session.commit()
     return
 
