@@ -23,6 +23,10 @@ const AdPage = () => {
     const [newReview, setNewReview] = useState({ title: '', description: '', rating: 5 });
     const [reviewLoading, setReviewLoading] = useState(false);
     const [user, setUser] = useState(null);
+    
+    // NOWY STAN: indeks aktualnie wyświetlanego zdjęcia
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -30,6 +34,8 @@ const AdPage = () => {
             try {
                 const response = await api.get(`/ads/${id}`);
                 setAd(response.data);
+                // Resetujemy indeks przy ładowaniu nowego ogłoszenia
+                setActiveImageIndex(0);
             } catch (error) {
                 console.error('Błąd pobierania ogłoszenia: ', error);
             } finally {
@@ -53,11 +59,9 @@ const AdPage = () => {
 
     useEffect(() => {
         const bpId = ad?.bp_id;
-
         if (bpId !== undefined && bpId !== null) {
             const fetchBusinessProfile = async () => {
                 try {
-                    console.log("Pobieram profil dla ID:", bpId);
                     const response = await api.get(`/businesses/${bpId}`);
                     setBusinessProfile(response.data);
                 } catch (error) {
@@ -71,12 +75,9 @@ const AdPage = () => {
     useEffect(() => {
         const fetchReviews = async () => {
             if (!id) return;
-
             try {
                 const response = await api.get(`/reviews/ad/${id}`);
                 setReviews(response.data);
-
-                // Oblicz średnią ocen
                 if (response.data.length > 0) {
                     const avg = response.data.reduce((sum, review) => sum + review.rating, 0) / response.data.length;
                     setAverageRating({ average: avg, count: response.data.length });
@@ -85,7 +86,6 @@ const AdPage = () => {
                 console.error('Błąd pobierania recenzji: ', error);
             }
         };
-
         fetchReviews();
     }, [id]);
 
@@ -95,7 +95,6 @@ const AdPage = () => {
             alert('Musisz być zalogowany, aby dodać recenzję');
             return;
         }
-
         setReviewLoading(true);
         try {
             const reviewData = {
@@ -103,23 +102,12 @@ const AdPage = () => {
                 ad_id: parseInt(id),
                 rating: parseFloat(newReview.rating)
             };
-
             const response = await api.post('/reviews', reviewData);
-
-            // Dodaj nową recenzję do listy
             setReviews([...reviews, response.data]);
-
-            // Oblicz nową średnią
             const newAvg = (averageRating.average * averageRating.count + reviewData.rating) / (averageRating.count + 1);
-            setAverageRating({
-                average: newAvg,
-                count: averageRating.count + 1
-            });
-
-            // Resetuj formularz
+            setAverageRating({ average: newAvg, count: averageRating.count + 1 });
             setNewReview({ title: '', description: '', rating: 5 });
             setShowReviewForm(false);
-
             alert('Recenzja dodana pomyślnie!');
         } catch (error) {
             console.error('Błąd dodawania recenzji: ', error);
@@ -131,24 +119,17 @@ const AdPage = () => {
 
     const handleDeleteReview = async (reviewId) => {
         if (!window.confirm('Czy na pewno chcesz usunąć tę recenzję?')) return;
-
         try {
             await api.delete(`/reviews/${reviewId}`);
             setReviews(reviews.filter(review => review.review_id !== reviewId));
-
-            // Przelicz średnią
             const deletedReview = reviews.find(r => r.review_id === reviewId);
             if (deletedReview && averageRating.count > 1) {
                 const newTotal = averageRating.average * averageRating.count - deletedReview.rating;
                 const newCount = averageRating.count - 1;
-                setAverageRating({
-                    average: newTotal / newCount,
-                    count: newCount
-                });
+                setAverageRating({ average: newTotal / newCount, count: newCount });
             } else {
                 setAverageRating({ average: 0, count: 0 });
             }
-
             alert('Recenzja usunięta pomyślnie');
         } catch (error) {
             console.error('Błąd usuwania recenzji: ', error);
@@ -177,13 +158,8 @@ const AdPage = () => {
                     <span className="text-5xl">❌</span>
                 </div>
                 <h1 className="text-3xl font-bold text-slate-900 mb-4">Ogłoszenie nie istnieje</h1>
-                <p className="text-gray-600 text-lg mb-8">
-                    Ogłoszenie, które próbujesz wyświetlić, zostało usunięte lub nie istnieje.
-                </p>
-                <button
-                    onClick={() => navigate('/')}
-                    className="bg-gradient-to-r from-[#FE7F2D] to-orange-500 hover:from-[#E76F1F] hover:to-orange-600 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg"
-                >
+                <p className="text-gray-600 text-lg mb-8">Ogłoszenie, które próbujesz wyświetlić, zostało usunięte lub nie istnieje.</p>
+                <button onClick={() => navigate('/')} className="bg-gradient-to-r from-[#FE7F2D] to-orange-500 hover:from-[#E76F1F] hover:to-orange-600 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg">
                     Wróć do strony głównej
                 </button>
             </div>
@@ -205,9 +181,7 @@ const AdPage = () => {
                                         {ad.status ? '✅ AKTYWNE' : '⏳ OCZEKUJĄCE'}
                                     </span>
                                 </div>
-                                <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-3">
-                                    {ad.ad_title}
-                                </h1>
+                                <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-3">{ad.ad_title}</h1>
                                 <div className="flex items-center text-gray-600">
                                     <span className="mr-2 text-[#FE7F2D]">📍</span>
                                     <span className="text-lg">{ad.address}</span>
@@ -221,16 +195,16 @@ const AdPage = () => {
                     </div>
 
                     <div className="flex flex-col lg:flex-row">
-                        {/* Lewa kolumna - Zdjęcia i informacje */}
+                        {/* Lewa kolumna - GALERIA ZDJĘĆ */}
                         <div className="lg:w-2/5 p-8 bg-gray-50/50 border-r border-gray-100">
-                            {/* Galeria obrazków */}
                             <div className="mb-8">
+                                {/* Główne zdjęcie */}
                                 <div className="aspect-square w-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden mb-4 shadow-lg border border-gray-300">
                                     {ad.images && ad.images.length > 0 ? (
                                         <img
-                                            src={ad.images[0]}
+                                            src={ad.images[activeImageIndex]}
                                             alt={ad.ad_title}
-                                            className="object-cover w-full h-full"
+                                            className="object-cover w-full h-full transition-opacity duration-300"
                                         />
                                     ) : (
                                         <div className="flex items-center justify-center w-full h-full">
@@ -238,13 +212,23 @@ const AdPage = () => {
                                         </div>
                                     )}
                                 </div>
+                                
+                                {/* Miniaturki (wyświetlane jeśli jest > 0 zdjęć) */}
                                 {ad.images && ad.images.length > 1 && (
                                     <div className="grid grid-cols-4 gap-2">
-                                        {ad.images.slice(1).map((img, index) => (
-                                            <div key={index} className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                                        {ad.images.map((img, index) => (
+                                            <div 
+                                                key={index} 
+                                                onClick={() => setActiveImageIndex(index)}
+                                                className={`aspect-square rounded-lg overflow-hidden cursor-pointer transition-all border-2 ${
+                                                    activeImageIndex === index 
+                                                    ? 'border-[#FE7F2D] scale-95' 
+                                                    : 'border-transparent hover:border-gray-300'
+                                                }`}
+                                            >
                                                 <img
                                                     src={img}
-                                                    alt={`${ad.ad_title} ${index + 2}`}
+                                                    alt={`${ad.ad_title} thumbnail ${index + 1}`}
                                                     className="object-cover w-full h-full"
                                                 />
                                             </div>
@@ -259,21 +243,10 @@ const AdPage = () => {
                                     <span className="mr-2">📋</span> Szczegóły ogłoszenia
                                 </h3>
                                 <div className="space-y-4">
-                                    <InfoRow
-                                        label="Nazwa Firmy"
-                                        value={businessProfile ? businessProfile.bp_name : "Ładowanie..."}
-                                        icon="🏢"
-                                        loading={!businessProfile}
-                                    />
+                                    <InfoRow label="Nazwa Firmy" value={businessProfile ? businessProfile.bp_name : "Ładowanie..."} icon="🏢" loading={!businessProfile} />
                                     <InfoRow label="Data publikacji" value={ad.post_date} icon="📅" />
                                     <InfoRow label="Termin wygaśnięcia" value={ad.due_date} icon="⏰" />
-                                    <InfoRow
-                                        label="Status"
-                                        value={ad.status ? "Aktywne" : "Oczekuje na zatwierdzenie"}
-                                        icon={ad.status ? "✅" : "⏳"}
-                                        isStatus
-                                        statusValue={ad.status}
-                                    />
+                                    <InfoRow label="Status" value={ad.status ? "Aktywne" : "Oczekuje"} icon={ad.status ? "✅" : "⏳"} isStatus statusValue={ad.status} />
                                 </div>
                             </div>
                         </div>
@@ -284,16 +257,11 @@ const AdPage = () => {
                                 <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
                                     <span className="mr-2">📄</span> Opis ogłoszenia
                                 </h3>
-                                <div className="prose prose-lg max-w-none">
-                                    <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-                                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                            {ad.description || "Brak opisu"}
-                                        </p>
-                                    </div>
+                                <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+                                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{ad.description || "Brak opisu"}</p>
                                 </div>
                             </div>
 
-                            {/* Sekcja firmy */}
                             {businessProfile && (
                                 <div className="mb-8">
                                     <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
@@ -301,43 +269,24 @@ const AdPage = () => {
                                     </h3>
                                     <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-100">
                                         <h4 className="text-xl font-bold text-slate-900 mb-2">{businessProfile.bp_name}</h4>
-                                        {businessProfile.description && (
-                                            <p className="text-gray-600 mb-4">{businessProfile.description}</p>
-                                        )}
+                                        {businessProfile.description && <p className="text-gray-600 mb-4">{businessProfile.description}</p>}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {businessProfile.address && (
-                                                <div className="flex items-center text-gray-500">
-                                                    <span className="mr-2">📍</span>
-                                                    <span>{businessProfile.address}</span>
-                                                </div>
-                                            )}
-                                            {businessProfile.phone && (
-                                                <div className="flex items-center text-gray-500">
-                                                    <span className="mr-2">📞</span>
-                                                    <span>{businessProfile.phone}</span>
-                                                </div>
-                                            )}
+                                            {businessProfile.address && <div className="flex items-center text-gray-500"><span className="mr-2">📍</span>{businessProfile.address}</div>}
+                                            {businessProfile.phone && <div className="flex items-center text-gray-500"><span className="mr-2">📞</span>{businessProfile.phone}</div>}
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Akcje */}
                             <div className="mt-8 pt-8 border-t border-gray-200">
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     {businessProfile && (
-                                        <button
-                                            onClick={() => navigate(`/business/${ad.bp_id}`)}
-                                            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center justify-center"
-                                        >
-                                            <span className="mr-2">🏢</span> Zobacz pełny profil firmy
+                                        <button onClick={() => navigate(`/business/${ad.bp_id}`)} className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center justify-center">
+                                            <span className="mr-2">🏢</span> Profil firmy
                                         </button>
                                     )}
-                                    <button
-                                        onClick={() => navigate('/')}
-                                        className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center justify-center"
-                                    >
-                                        <span className="mr-2">←</span> Wróć do ogłoszeń
+                                    <button onClick={() => navigate('/')} className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center justify-center">
+                                        <span className="mr-2">←</span> Wróć
                                     </button>
                                 </div>
                             </div>
@@ -357,162 +306,71 @@ const AdPage = () => {
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center">
                                         <Star className="fill-amber-400 text-amber-400 mr-1" size={20} />
-                                        <span className="text-2xl font-bold text-slate-900">
-                                            {averageRating.average.toFixed(1)}
-                                        </span>
+                                        <span className="text-2xl font-bold text-slate-900">{averageRating.average.toFixed(1)}</span>
                                     </div>
-                                    <div className="text-gray-600">
-                                        <span className="font-medium">{averageRating.count} {getReviewDeclension(averageRating.count)}</span>
-                                    </div>
+                                    <div className="text-gray-600 font-medium">{averageRating.count} {getReviewDeclension(averageRating.count)}</div>
                                 </div>
                             </div>
                             {user && (
-                                <button
-                                    onClick={() => setShowReviewForm(true)}
-                                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center"
-                                >
-                                    <Plus size={20} className="mr-2" />
-                                    Dodaj recenzję
+                                <button onClick={() => setShowReviewForm(true)} className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center">
+                                    <Plus size={20} className="mr-2" /> Dodaj recenzję
                                 </button>
                             )}
                         </div>
                     </div>
 
-                    {/* Formularz dodawania recenzji */}
                     {showReviewForm && (
                         <div className="p-8 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-cyan-50">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-bold text-slate-900">Dodaj nową recenzję</h3>
-                                <button
-                                    onClick={() => setShowReviewForm(false)}
-                                    className="p-2 text-gray-500 hover:text-gray-700"
-                                >
-                                    <X size={24} />
-                                </button>
+                                <button onClick={() => setShowReviewForm(false)} className="p-2 text-gray-500 hover:text-gray-700"><X size={24} /></button>
                             </div>
-
                             <form onSubmit={handleSubmitReview} className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Tytuł recenzji *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newReview.title}
-                                        onChange={(e) => setNewReview({...newReview, title: e.target.value})}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Podaj tytuł recenzji"
-                                        required
-                                    />
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Tytuł *</label>
+                                    <input type="text" value={newReview.title} onChange={(e) => setNewReview({...newReview, title: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="Tytuł recenzji" required />
                                 </div>
-
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Ocena *
-                                    </label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Ocena *</label>
                                     <div className="flex items-center gap-1">
                                         {[1, 2, 3, 4, 5].map((star) => (
-                                            <button
-                                                key={star}
-                                                type="button"
-                                                onClick={() => setNewReview({...newReview, rating: star})}
-                                                className="p-1"
-                                            >
-                                                <Star
-                                                    size={32}
-                                                    className={`${
-                                                        star <= newReview.rating 
-                                                            ? 'fill-amber-400 text-amber-400' 
-                                                            : 'fill-gray-200 text-gray-200'
-                                                    } hover:scale-110 transition-transform`}
-                                                />
+                                            <button key={star} type="button" onClick={() => setNewReview({...newReview, rating: star})} className="p-1">
+                                                <Star size={32} className={`${star <= newReview.rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'} hover:scale-110 transition-transform`} />
                                             </button>
                                         ))}
-                                        <span className="ml-4 text-lg font-bold text-slate-900">
-                                            {newReview.rating.toFixed(1)} / 5.0
-                                        </span>
                                     </div>
                                 </div>
-
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Opis recenzji *
-                                    </label>
-                                    <textarea
-                                        value={newReview.description}
-                                        onChange={(e) => setNewReview({...newReview, description: e.target.value})}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px]"
-                                        placeholder="Opisz swoje doświadczenia..."
-                                        required
-                                    />
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Opis *</label>
+                                    <textarea value={newReview.description} onChange={(e) => setNewReview({...newReview, description: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 min-h-[120px]" placeholder="Twoja opinia..." required />
                                 </div>
-
                                 <div className="flex justify-end gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowReviewForm(false)}
-                                        className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
-                                    >
-                                        Anuluj
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={reviewLoading}
-                                        className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center disabled:opacity-50"
-                                    >
-                                        {reviewLoading ? (
-                                            <>
-                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                                                Dodawanie...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Send size={18} className="mr-2" />
-                                                Dodaj recenzję
-                                            </>
-                                        )}
+                                    <button type="button" onClick={() => setShowReviewForm(false)} className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl">Anuluj</button>
+                                    <button type="submit" disabled={reviewLoading} className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold disabled:opacity-50">
+                                        {reviewLoading ? 'Dodawanie...' : 'Wyślij'}
                                     </button>
                                 </div>
                             </form>
                         </div>
                     )}
 
-                    {/* Lista recenzji */}
                     <div className="p-8">
                         {reviews.length === 0 ? (
                             <div className="text-center py-12">
-                                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-6">
-                                    <MessageSquare size={32} className="text-gray-400" />
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-900 mb-3">Brak recenzji</h3>
-                                <p className="text-gray-600 mb-8">
-                                    Ten produkt nie ma jeszcze żadnych recenzji. Bądź pierwszy!
-                                </p>
-                                {!user && (
-                                    <button
-                                        onClick={() => navigate('/login')}
-                                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg"
-                                    >
-                                        Zaloguj się, aby dodać recenzję
-                                    </button>
-                                )}
+                                <MessageSquare size={32} className="text-gray-400 mx-auto mb-4" />
+                                <h3 className="text-xl font-bold text-slate-900 mb-2">Brak recenzji</h3>
+                                {!user && <button onClick={() => navigate('/login')} className="text-purple-600 font-bold">Zaloguj się, by dodać pierwszą!</button>}
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {reviews.map((review) => (
-                                    <ReviewCard
-                                        key={review.review_id}
-                                        review={review}
-                                        currentUserId={user?.user_id}
-                                        onDelete={handleDeleteReview}
-                                    />
+                                    <ReviewCard key={review.review_id} review={review} currentUserId={user?.user_id} onDelete={handleDeleteReview} />
                                 ))}
                             </div>
                         )}
                     </div>
                 </div>
             </div>
-
             <FloatingLogger />
         </div>
     );
