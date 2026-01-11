@@ -51,6 +51,7 @@ class Ad(SQLModel, table=True):
 
     business_profile: "BusinessProfile" = Relationship(back_populates="ads")
     ad_category: list["AdCategory"] = Relationship(back_populates="ads2")
+    reviews: list["Reviews"] = Relationship(back_populates="ads3")
 
 
 class AdCategory(SQLModel, table=True):
@@ -60,3 +61,12 @@ class AdCategory(SQLModel, table=True):
 
     ads2: "Ad" = Relationship(back_populates="ad_category")
     ad_category2: "Categories" = Relationship(back_populates="category")
+
+class Reviews(SQLModel, table=True):
+    review_id: int = Field(default=None, primary_key=True)
+    ad_id: int = Field(nullable=False, foreign_key="ad.ad_id")
+    title: str = Field(nullable=False)
+    description: str = Field(nullable=False)
+    rating: float = Field(nullable=False)
+
+    ads3: "Ad" = Relationship(back_populates="reviews")
