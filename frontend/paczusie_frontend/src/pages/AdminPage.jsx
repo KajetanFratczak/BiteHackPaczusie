@@ -188,7 +188,7 @@ const AdminPage = () => {
                                         <td className="py-3 px-4">{ad.ad_id}</td>
                                         <td className="py-3 px-4 font-medium">{ad.ad_title}</td>
                                         <td className="py-3 px-4 max-w-xs truncate">{ad.description}</td>
-                                        <td className="py-3 px-4">{ad.price} zł</td>
+                                        <td className="py-3 px-4">{parseFloat(ad.price).toFixed(2)} zł</td>
                                         <td className="py-3 px-4">{ad.address}</td>
                                         <td className="py-3 px-4">{new Date(ad.post_date).toLocaleDateString()}</td>
                                         <td className="py-3 px-4">

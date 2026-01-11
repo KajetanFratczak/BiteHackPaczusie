@@ -6,10 +6,21 @@ import api from '../services/api';
 import { adService } from '../services/adService';
 import { companyService } from '../services/companyService';
 
+// Funkcja do odmiany słowa "ogłoszenie"
+const getAdsDeclension = (count) => {
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
+
+    if (count === 1) return 'ogłoszenie';
+    if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 10 || lastTwoDigits > 20)) return 'ogłoszenia';
+    return 'ogłoszeń';
+};
+
 const BusinessProfilePage = () => {
     const { bp_id } = useParams();
     const navigate = useNavigate();
     const [business, setBusiness] = useState(null);
+    const [owner, setOwner] = useState(null);
     const [ads, setAds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -21,6 +32,16 @@ const BusinessProfilePage = () => {
                 // Pobierz dane firmy
                 const businessResponse = await companyService.getById(bp_id);
                 setBusiness(businessResponse);
+
+                // Pobierz dane właściciela (użytkownika)
+                if (businessResponse.user_id) {
+                    try {
+                        const ownerResponse = await api.get(`/users/${businessResponse.user_id}`);
+                        setOwner(ownerResponse.data);
+                    } catch (err) {
+                        console.error('Błąd pobierania danych właściciela: ', err);
+                    }
+                }
 
                 // Pobierz ogłoszenia firmy
                 const adsResponse = await api.get(`/businesses/${bp_id}/ads`);
@@ -104,6 +125,17 @@ const BusinessProfilePage = () => {
                                             {business.address}
                                         </span>
                                     </div>
+                                    {/* Wyświetl właściciela jeśli dane są dostępne */}
+                                    {owner && (
+                                        <div className="flex items-center mt-3 text-gray-700">
+                                            <span className="mr-2">👤</span>
+                                            <span className="font-medium">
+                                                {owner.first_name} {owner.last_name}
+                                            </span>
+                                            <span className="mx-2 text-gray-400">•</span>
+                                            <span className="text-sm text-gray-500">Właściciel</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -111,13 +143,15 @@ const BusinessProfilePage = () => {
                             <div className="flex gap-4">
                                 <div className="text-center bg-gray-50 p-4 rounded-lg min-w-[120px]">
                                     <div className="text-2xl font-bold text-slate-800">{ads.length}</div>
-                                    <div className="text-sm text-gray-500 mt-1">Ogłoszeń</div>
+                                    <div className="text-sm text-gray-500 mt-1">
+                                        {getAdsDeclension(ads.length)}
+                                    </div>
                                 </div>
                                 <div className="text-center bg-gray-50 p-4 rounded-lg min-w-[120px]">
+                                    <div className="text-sm text-gray-500 mt-1">Od</div>
                                     <div className="text-2xl font-bold text-slate-800">
                                         {new Date(business.created_at).toLocaleDateString('pl-PL')}
                                     </div>
-                                    <div className="text-sm text-gray-500 mt-1">Od</div>
                                 </div>
                             </div>
                         </div>
@@ -132,10 +166,26 @@ const BusinessProfilePage = () => {
                             </div>
                         )}
 
-                        {/* Informacje kontaktowe */}
+                        {/* Informacje kontaktowe i właściciel */}
                         <div className="mt-8 pt-8 border-t border-gray-100">
-                            <h3 className="text-lg font-semibold text-slate-700 mb-4">Kontakt</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <h3 className="text-lg font-semibold text-slate-700 mb-4">Informacje</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {/* Właściciel */}
+                                {owner && (
+                                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                        <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                                            <span className="text-orange-500">👤</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-500">Właściciel</p>
+                                            <p className="font-semibold text-slate-700">
+                                                {owner.first_name} {owner.last_name}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Telefon */}
                                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                     <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
                                         <span className="text-orange-500">📞</span>
@@ -145,6 +195,8 @@ const BusinessProfilePage = () => {
                                         <p className="font-semibold text-slate-700">{business.phone}</p>
                                     </div>
                                 </div>
+
+                                {/* Adres */}
                                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                     <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
                                         <span className="text-orange-500">📍</span>
@@ -176,10 +228,9 @@ const BusinessProfilePage = () => {
                         <h2 className="text-2xl font-bold text-slate-800">
                             Ogłoszenia firmy
                             <span className="ml-2 bg-orange-100 text-orange-600 text-sm font-semibold px-3 py-1 rounded-full">
-                                {ads.length}
+                                {ads.length} {getAdsDeclension(ads.length)}
                             </span>
                         </h2>
-                        {/* USUNIĘTO: Sortuj według */}
                     </div>
 
                     {ads.length === 0 ? (
