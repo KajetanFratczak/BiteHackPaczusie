@@ -55,10 +55,6 @@ const WelcomePopup = () => {
                     Twój biznes • Twoja okolica • Twoje zasady
                 </p>
             </div>
-
-            <div className="absolute bottom-0 right-0 p-8 opacity-10 select-none pointer-events-none">
-                 <h1 className="text-9xl font-black">OTO</h1>
-            </div>
         </div>
     );
 }

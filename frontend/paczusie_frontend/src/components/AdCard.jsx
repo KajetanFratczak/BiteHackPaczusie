@@ -14,7 +14,7 @@ const AdCard = ({ id, title, description, price, address, images, categories }) 
   return (
     <div
       onClick={() => navigate(`/ads/${id}`)}
-      className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden border border-gray-100 hover:border-[#FE7F2D]/30 group transform hover:-translate-y-1"
+      className="flex flex-col h-full bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden border border-gray-100 hover:border-[#FE7F2D]/30 group transform hover:-translate-y-1"
     >
       {/* Obrazek */}
       <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden relative">
@@ -38,7 +38,7 @@ const AdCard = ({ id, title, description, price, address, images, categories }) 
       </div>
 
       {/* Zawartość karty */}
-      <div className="p-5">
+      <div className="p-5 flex flex-col flex-1">
         <div className="mb-3">
           <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#FE7F2D] transition-colors line-clamp-2 leading-tight mb-2">
             {title}
@@ -72,7 +72,7 @@ const AdCard = ({ id, title, description, price, address, images, categories }) 
         </div>
 
         {/* Przycisk */}
-        <button className="w-full bg-gradient-to-r from-gray-50 to-gray-100 hover:from-[#FE7F2D] hover:to-orange-500 text-gray-700 hover:text-white font-bold py-3 rounded-xl transition-all duration-300 border border-gray-200 hover:border-[#FE7F2D] flex items-center justify-center gap-2 group/btn">
+        <button className="mt-auto w-full bg-gradient-to-r from-gray-50 to-gray-100 hover:from-[#FE7F2D] hover:to-orange-500 text-gray-700 hover:text-white font-bold py-3 rounded-xl transition-all duration-300 border border-gray-200 hover:border-[#FE7F2D] flex items-center justify-center gap-2 group/btn">
           <span>🔍</span>
           Zobacz szczegóły
           <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
