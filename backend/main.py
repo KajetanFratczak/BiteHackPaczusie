@@ -198,6 +198,11 @@ def delete_business(bp_id: int, session: Session = Depends(get_session)):
         ad_categories = session.exec(select(AdCategory).where(AdCategory.ad_id == ad.ad_id)).all()
         for ad_category in ad_categories:
             session.delete(ad_category)
+
+        ad_reviews = session.exec(select(Reviews).where(Reviews.ad_id == ad.ad_id)).all()
+        for ad_review in ad_reviews:
+            session.delete(ad_review)
+
         session.delete(ad)
 
     session.delete(db_bp)
@@ -306,8 +311,13 @@ def delete_ad(ad_id: int, session: Session = Depends(get_session)):
 
     ad_categories = session.exec(select(AdCategory).where(AdCategory.ad_id == ad_id)).all()
 
+    ad_reviews = session.exec(select(Reviews).where(Reviews.ad_id == ad_id)).all()
+
     for ad_category in ad_categories:
         session.delete(ad_category)
+
+    for ad_review in ad_reviews:
+        session.delete(ad_review)
 
     session.delete(ad)
     session.commit()
