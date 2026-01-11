@@ -7,15 +7,12 @@ const AdCard = ({ id, title, description, price, address, images, categories }) 
 
   const formatPrice = (price) => {
     const numPrice = parseFloat(price);
-
-    // jak numericPrice to NaN, to zwracamy 0
-    const safePrice = isNaN(numPrice) ? 0 : numPrice;
-
-    return safePrice.toLocaleString('pl-PL', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
+    if (isNaN(numPrice)) return '0.00 PLN';
+    return numPrice.toLocaleString('pl-PL', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }) + ' PLN';
+};
 
   return (
     <div

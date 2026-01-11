@@ -6,6 +6,15 @@ import api from '../services/api';
 import { adService } from '../services/adService';
 import { companyService } from '../services/companyService';
 
+const formatPrice = (price) => {
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice)) return '0.00 PLN';
+    return numPrice.toLocaleString('pl-PL', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }) + ' PLN';
+};
+
 const getAdsDeclension = (count) => {
     const lastDigit = count % 10;
     const lastTwoDigits = count % 100;
@@ -344,10 +353,7 @@ const AdCard = ({ ad, onClick }) => {
                     <div className="text-center">
                         <div className="text-sm font-medium text-gray-500 mb-1">Cena</div>
                         <div className="text-2xl lg:text-3xl font-black text-slate-900">
-                            {parseFloat(ad.price).toLocaleString('pl-PL', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            })} PLN
+                            {formatPrice(ad.price)}
                         </div>
                     </div>
                 </div>
