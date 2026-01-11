@@ -33,11 +33,16 @@ const HomePage = () => {
         }
         const data = await adService.getAll(params);
 
-        setAds(data.map(ad => ({
+        // tylko wyświetlamy zatwierdzone ogłoszenia
+        const approvedAds = data.filter(ad => ad.status === true);
+
+        setAds(approvedAds.map(ad => ({
           id: ad.ad_id,
           title: ad.ad_title,
           description: ad.description,
         })));
+      } catch (error) {
+        console.error('Błąd pobierania ogłoszeń:', error);
       } finally {
         setLoading(false);
       }
