@@ -70,7 +70,7 @@ const HomePage = () => {
   }, [searchTerm, selectedCategory]);
 
   return (
-    <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen pb-32">
+    <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen pb-32">
       <Navbar />
 
       {/* Hero section */}

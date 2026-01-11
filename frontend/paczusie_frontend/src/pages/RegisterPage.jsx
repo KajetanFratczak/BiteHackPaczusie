@@ -65,7 +65,7 @@ const RegisterPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-[#F5FBE6] to-gray-50">
+        <div className="min-h-screen bg-gradient-to-b from-[#FDF6E3] to-gray-50">
             <Navbar />
 
             <div className="flex justify-center items-center min-h-[calc(100vh-80px)] p-4">

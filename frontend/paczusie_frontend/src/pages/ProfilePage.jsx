@@ -363,7 +363,7 @@ const ProfilePage = () => {
                         {businesses.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {businesses.map(business => (
-                                    <div key={business.bp_id} className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                                    <div key={business.bp_id} className="flex flex-col h-full bg-white rounded-2xl shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
                                         <div className="flex justify-between items-start mb-4">
                                             <h3 className="text-xl font-bold text-slate-900">{business.bp_name}</h3>
                                         </div>
@@ -380,7 +380,7 @@ const ProfilePage = () => {
                                         </div>
                                         <button
                                             onClick={() => handleDeleteBusiness(business.bp_id)}
-                                            className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg"
+                                            className="mt-auto w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg"
                                         >
                                             Usuń Firmę
                                         </button>
@@ -622,7 +622,7 @@ const ProfilePage = () => {
                                             </div>
                                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center min-w-[140px]">
                                                 <span className="text-xs text-gray-400 uppercase font-semibold block mb-1">Cena</span>
-                                                <span className="text-2xl font-black text-slate-900">{ad.price}</span>
+                                                <span className="text-2xl font-black text-slate-900">{ad.price || '0 zł'}</span>
                                             </div>
                                         </div>
                                         <p className="text-gray-600 mb-6 line-clamp-2">{ad.description || "Brak opisu"}</p>

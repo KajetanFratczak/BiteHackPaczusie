@@ -111,9 +111,22 @@ const AdminPage = () => {
         });
     };
 
+    const formatPrice = (price) => {
+
+        const numPrice = parseFloat(price);
+
+        // jak numericPrice to NaN, to zwracamy 0
+        const safePrice = isNaN(numPrice) ? 0 : numPrice;
+
+        return safePrice.toLocaleString('pl-PL', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
     if (loading) {
         return (
-            <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen">
+            <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen">
                 <Navbar />
                 <div className="flex flex-col items-center justify-center min-h-[60vh]">
                     <div className="relative">
@@ -127,7 +140,7 @@ const AdminPage = () => {
     }
 
     return (
-        <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen pb-12">
+        <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen pb-12">
             <Navbar />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -396,9 +409,11 @@ const AdminPage = () => {
                                                 </td>
                                                 <td className="py-4 px-6 font-medium text-slate-800 max-w-xs truncate">{ad.ad_title}</td>
                                                 <td className="py-4 px-6 text-gray-600 max-w-md truncate">{ad.description}</td>
+                                                
+                                                
                                                 <td className="py-4 px-6">
                                                     <span className="bg-slate-100 text-slate-900 font-bold px-3 py-1.5 rounded-lg">
-                                                        {parseFloat(ad.price).toFixed(2)} zł
+                                                        {formatPrice(ad.price)} zł
                                                     </span>
                                                 </td>
                                                 <td className="py-4 px-6">

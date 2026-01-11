@@ -67,7 +67,7 @@ const BusinessProfilePage = () => {
     };
 
     if (loading) return (
-        <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen">
+        <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen">
             <Navbar />
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
                 <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -83,7 +83,7 @@ const BusinessProfilePage = () => {
     );
 
     if (error || !business) return (
-        <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen">
+        <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen">
             <Navbar />
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
                 <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
@@ -105,7 +105,7 @@ const BusinessProfilePage = () => {
     );
 
     return (
-        <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen pb-12">
+        <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen pb-12">
             <Navbar />
 
             {/* Główny kontener */}

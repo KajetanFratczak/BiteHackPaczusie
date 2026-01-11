@@ -1,3 +1,4 @@
+import { parse } from 'postcss';
 import React from 'react';
 import { useNavigate } from 'react-router';
 
@@ -5,7 +6,12 @@ const AdCard = ({ id, title, description, price, address, images, categories }) 
   const navigate = useNavigate();
 
   const formatPrice = (price) => {
-    return parseFloat(price).toLocaleString('pl-PL', {
+    const numPrice = parseFloat(price);
+
+    // jak numericPrice to NaN, to zwracamy 0
+    const safePrice = isNaN(numPrice) ? 0 : numPrice;
+
+    return safePrice.toLocaleString('pl-PL', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
@@ -56,7 +62,7 @@ const AdCard = ({ id, title, description, price, address, images, categories }) 
 
         {/* Kategorie */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {categories && categories.slice(0, 3).map((cat, index) => (
+          {categories && categories.slice(0, 4).map((cat, index) => (
             <span
               key={index}
               className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-100"
@@ -64,9 +70,9 @@ const AdCard = ({ id, title, description, price, address, images, categories }) 
               {cat}
             </span>
           ))}
-          {categories && categories.length > 3 && (
+          {categories && categories.length > 4 && (
             <span className="bg-gray-100 text-gray-500 text-xs font-semibold px-3 py-1.5 rounded-full">
-              +{categories.length - 3}
+              +{categories.length - 4}
             </span>
           )}
         </div>

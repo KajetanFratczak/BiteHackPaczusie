@@ -43,7 +43,7 @@ const LoginPage = () => {
     }
 
     return (
-        <div className='min-h-screen bg-gradient-to-b from-[#F5FBE6] to-gray-50'>
+        <div className='min-h-screen bg-gradient-to-b from-[#FDF6E3] to-gray-50'>
             <Navbar/>
             <div className="flex justify-center items-center p-4 pt-16">
                 <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-md border border-gray-200">

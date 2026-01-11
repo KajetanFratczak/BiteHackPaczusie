@@ -19,21 +19,11 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
         <Link to="/" className="flex items-center gap-3 group">
           <img src={logo} alt="OtoBiznes Logo" className="h-10 md:h-12 group-hover:opacity-90 transition-opacity" />
-          <span className="text-xl font-bold hidden md:inline-block">OtoBiznes</span>
         </Link>
 
         {/* Nawigacja dla zalogowanych użytkowników */}
         {user ? (
           <div className="flex items-center gap-6">
-            {user.role === 'business_owner' && (
-              <Link
-                to="/profile?tab=ads"
-                className="font-medium hover:text-[#FE7F2D] transition-colors hidden md:inline-block"
-              >
-                Dodaj ogłoszenie
-              </Link>
-            )}
-
             <div className="relative group">
               <button className="flex items-center gap-3 bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-xl transition-all duration-300 backdrop-blur-sm">
                 <div className="w-8 h-8 bg-gradient-to-r from-[#FE7F2D] to-orange-500 rounded-full flex items-center justify-center font-bold">
@@ -52,22 +42,6 @@ const Navbar = () => {
                 >
                   👤 Mój Profil
                 </Link>
-                {user.role === 'business_owner' && (
-                  <>
-                    <Link
-                      to="/profile?tab=businesses"
-                      className="block px-4 py-3 text-gray-800 hover:bg-gray-50 font-medium"
-                    >
-                      🏢 Moje Firmy
-                    </Link>
-                    <Link
-                      to="/profile?tab=ads"
-                      className="block px-4 py-3 text-gray-800 hover:bg-gray-50 font-medium"
-                    >
-                      📋 Moje Ogłoszenia
-                    </Link>
-                  </>
-                )}
                 <div className="border-t border-gray-100">
                   <button
                     onClick={handleLogout}

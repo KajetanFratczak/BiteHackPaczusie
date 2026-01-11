@@ -191,7 +191,7 @@ const AdPage = () => {
     );
 
     return (
-        <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen pb-12">
+        <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen pb-12">
             <Navbar />
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -215,7 +215,7 @@ const AdPage = () => {
                             </div>
                             <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-xl border border-orange-100 min-w-[200px] text-center">
                                 <span className="text-xs text-gray-500 uppercase font-semibold tracking-wider block mb-2">CENA</span>
-                                <span className="text-4xl font-black text-slate-900">{ad.price}</span>
+                                <span className="text-4xl font-black text-slate-900">{ad.price || '0 zł'}</span>
                             </div>
                         </div>
                     </div>
