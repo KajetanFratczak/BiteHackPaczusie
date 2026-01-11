@@ -37,6 +37,7 @@ const HomePage = () => {
           id: ad.ad_id,
           title: ad.ad_title,
           description: ad.description,
+          image: ad.images[0] || null
         })));
       } finally {
         setLoading(false);
@@ -74,11 +75,6 @@ const HomePage = () => {
           </select>
         </div>
       </div>
-
-      <div className="p-12 text-center text-3xl font-bold text-[#233D4D]">
-        <h2>Nowości</h2>
-      </div>
-
       {loading ? (
           <p className="text-center mt-10">Ładowanie ofert...</p>
       ) : (
@@ -90,6 +86,7 @@ const HomePage = () => {
                     id={ad.id}
                     title={ad.title}
                     description={ad.description}
+                    image={ad.image}
                 />
                 ))
             ) : (

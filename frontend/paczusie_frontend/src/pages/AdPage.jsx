@@ -8,6 +8,7 @@ const AdPage = () => {
     const { id } = useParams();
     const [ad, setAd] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [businessProfile, setBusinessProfile] = useState(null);
 
     useEffect(() => {
         const fetchAd = async () => {
@@ -22,6 +23,23 @@ const AdPage = () => {
         };
         fetchAd();
     }, [id]);
+
+    useEffect(() => {
+        const bpId = ad?.bp_id;
+        
+        if (bpId !== undefined && bpId !== null) {
+            const fetchBusinessProfile = async () => {
+                try {
+                    console.log("Pobieram profil dla ID:", bpId);
+                    const response = await api.get(`/businesses/${bpId}`);
+                    setBusinessProfile(response.data);
+                } catch (error) {
+                    console.error('Błąd pobierania profilu biznesu: ', error);
+                }
+            };
+            fetchBusinessProfile();
+        }
+    }, [ad]);
 
     if (loading) return <div className="text-center mt-10">Ładowanie ogłoszenia...</div>;
     if (!ad) return <div className="text-center mt-10">Ogłoszenie nie istnieje.</div>;
@@ -52,12 +70,21 @@ const AdPage = () => {
                     <div className="lg:w-1/3 p-6 bg-gray-50/50 border-r border-gray-100">
 
                         <div className="aspect-square w-full bg-gray-200 rounded-md flex items-center justify-center text-gray-400 font-bold mb-6 shadow-inner border border-gray-300">
-                            IMG
+                            {ad.images && ad.images.length > 0 ? (
+                                <img
+                                    src={ad.images[0]}
+                                    alt="Zdjęcie ogłoszenia"
+                                    className="object-cover w-full h-full rounded-md"
+                                />
+                            ) : (
+                                <span>Brak zdjęcia</span>
+                            )}
                         </div>
 
                         <div className="space-y-4">
                             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b pb-2">Informacje</h4>
                             
+                            <InfoRow label="Nazwa Firmy" value={businessProfile ? businessProfile.bp_name : "Ładowanie..."} />
                             <InfoRow label="Data publikacji" value={ad.post_date} />
                             <InfoRow label="Termin wygaśnięcia" value={ad.due_date} />
                             <InfoRow 
