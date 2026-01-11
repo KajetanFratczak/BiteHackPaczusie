@@ -113,9 +113,24 @@ def update_user(user_id: int, updated_user: User, session: Session = Depends(get
 @app.delete("/users/{user_id}")
 def delete_user(user_id: int, session: Session = Depends(get_session)):
     db_user = session.get(User, user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Użytkownik nie znaleziony")
+
+    bps = session.exec(select(BusinessProfile).where(BusinessProfile.user_id == user_id)).all()
+
+    for bp in bps:
+        ads = session.exec(select(Ad).where(Ad.bp_id == bp.bp_id)).all()
+        for ad in ads:
+            ad_categories = session.exec(select(AdCategory).where(AdCategory.ad_id == ad.ad_id)).all()
+            for ad_category in ad_categories:
+                session.delete(ad_category)
+            session.delete(ad)
+        session.delete(bp)
+
     session.delete(db_user)
     session.commit()
-    return  # 204 No Content
+    return {"message": "Użytkownik usunięty pomyślnie"}
+
 
 #Business CRUD
 @app.post("/businesses", response_model=BusinessProfile)
@@ -163,9 +178,20 @@ def update_business(bp_id: int, updated_buisiness: BusinessProfile, session: Ses
 @app.delete("/businesses/{bp_id}")
 def delete_business(bp_id: int, session: Session = Depends(get_session)):
     db_bp = session.get(BusinessProfile, bp_id)
+    if not db_bp:
+        raise HTTPException(status_code=404, detail="Profil biznesowy nie znaleziony")
+
+    ads = session.exec(select(Ad).where(Ad.bp_id == bp_id)).all()
+
+    for ad in ads:
+        ad_categories = session.exec(select(AdCategory).where(AdCategory.ad_id == ad.ad_id)).all()
+        for ad_category in ad_categories:
+            session.delete(ad_category)
+        session.delete(ad)
+
     session.delete(db_bp)
     session.commit()
-    return
+    return {"message": "Profil biznesowy usunięty pomyślnie"}
 
 #AD CRUD
 # Endpoint do tworzenia ogłoszenia
@@ -233,12 +259,20 @@ def get_all_ads(
     return session.exec(statement).all()
 
 
-@app.get("/ads/{ad_id}")
-def get_ad(ad_id: int, session: Session = Depends(get_session)):
+@app.delete("/ads/{ad_id}")
+def delete_ad(ad_id: int, session: Session = Depends(get_session)):
     ad = session.get(Ad, ad_id)
     if not ad:
         raise HTTPException(status_code=404, detail="Ogłoszenie nie znalezione")
-    return ad
+
+    ad_categories = session.exec(select(AdCategory).where(AdCategory.ad_id == ad_id)).all()
+
+    for ad_category in ad_categories:
+        session.delete(ad_category)
+
+    session.delete(ad)
+    session.commit()
+    return {"message": "Ogłoszenie usunięte pomyślnie"}
 
 
 @app.put("/ads/{ad_id}")
