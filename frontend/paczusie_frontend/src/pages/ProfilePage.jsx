@@ -31,6 +31,7 @@ const ProfilePage = () => {
     const [showAdForm, setShowAdForm] = useState(false);
     const [imageUrls, setImageUrls] = useState(['']);
     const [error, setError] = useState('');
+    const [alert, setAlert] = useState({ type: '', message: '' });
 
     const [businessData, setBusinessData] = useState({
         bp_name: '',
@@ -54,6 +55,11 @@ const ProfilePage = () => {
     useEffect(() => {
         loadData();
     }, []);
+
+    const showAlert = (type, message) => {
+        setAlert({ type, message });
+        setTimeout(() => setAlert({ type: '', message: '' }), 5000);
+    };
 
     const loadData = async () => {
         setLoading(true);
@@ -90,7 +96,7 @@ const ProfilePage = () => {
             setBusinessData({ bp_name: '', description: '', address: '', phone: '' });
             setShowBusinessForm(false);
             loadData();
-            alert('Firma została dodana pomyślnie!');
+            showAlert('success', 'Firma została dodana pomyślnie!');
         } catch (error) {
             console.error('Błąd dodawania firmy: ', error);
             setError('Nie udało się dodać firmy. Spróbuj ponownie.');
@@ -154,7 +160,7 @@ const ProfilePage = () => {
             setImageUrls(['']);
             setShowAdForm(false);
             loadData();
-            alert('Ogłoszenie zostało dodane! Oczekuje na zatwierdzenie przez administratora.');
+            showAlert('success', 'Ogłoszenie zostało dodane! Oczekuje na zatwierdzenie przez administratora.');
         } catch (error) {
             console.error('Błąd dodawania ogłoszenia: ', error);
             setError('Wystąpił błąd podczas dodawania ogłoszenia');
@@ -166,7 +172,7 @@ const ProfilePage = () => {
             try {
                 await companyService.delete(businessId);
                 loadData();
-                alert('Firma została usunięta');
+                showAlert('success', 'Firma została usunięta');
             } catch (error) {
                 console.error('Błąd usuwania firmy: ', error);
                 setError('Nie udało się usunąć firmy');
@@ -179,7 +185,7 @@ const ProfilePage = () => {
             try {
                 await adService.delete(adId);
                 loadData();
-                alert('Ogłoszenie zostało usunięte');
+                showAlert('success', 'Ogłoszenie zostało usunięte');
             } catch (error) {
                 console.error('Błąd usuwania ogłoszenia: ', error);
                 setError('Nie udało się usunąć ogłoszenia');
@@ -203,6 +209,54 @@ const ProfilePage = () => {
         <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen pb-12">
             <Navbar />
 
+            {/* Alerty */}
+            {alert.message && (
+                <div className="fixed top-4 right-4 z-50 max-w-md">
+                    <div className={`p-4 rounded-xl shadow-lg border ${
+                        alert.type === 'success' 
+                            ? 'bg-green-50 border-green-200' 
+                            : 'bg-red-50 border-red-200'
+                    }`}>
+                        <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 mt-0.5">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    alert.type === 'success'
+                                        ? 'bg-green-100'
+                                        : 'bg-red-100'
+                                }`}>
+                                    <span className={`text-lg ${
+                                        alert.type === 'success' ? 'text-green-600' : 'text-red-600'
+                                    }`}>
+                                        {alert.type === 'success' ? '✓' : '!'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className={`font-semibold mb-1 ${
+                                    alert.type === 'success' ? 'text-green-800' : 'text-red-800'
+                                }`}>
+                                    {alert.type === 'success' ? 'Sukces' : 'Błąd'}
+                                </h3>
+                                <p className={`text-sm ${
+                                    alert.type === 'success' ? 'text-green-700' : 'text-red-700'
+                                }`}>
+                                    {alert.message}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setAlert({ type: '', message: '' })}
+                                className={`flex-shrink-0 ${
+                                    alert.type === 'success' ? 'text-green-500 hover:text-green-700' : 'text-red-500 hover:text-red-700'
+                                } transition-colors`}
+                                aria-label="Zamknij alert"
+                            >
+                                <span className="text-xl">×</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
                 <div className="text-center mb-10">
                     <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
@@ -218,7 +272,7 @@ const ProfilePage = () => {
                         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
                             <div className="flex">
                                 <div className="flex-shrink-0">
-                                    <span className="text-red-500">⚠️</span>
+                                    <span className="text-red-500">!</span>
                                 </div>
                                 <div className="ml-3">
                                     <p className="text-sm text-red-700">{error}</p>
