@@ -12,12 +12,13 @@ from schemas import Token, UserCreate, UserRead
 import security
 from sqlalchemy import or_
 
-
 app = FastAPI()
+
 
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+
 
 origins = [
     "http://localhost:3000",
@@ -35,7 +36,6 @@ app.add_middleware(
 # AUTH ENDPOINTS
 @app.post("/register", response_model=UserRead)
 def register(user_data: UserCreate, session: Session = Depends(get_session)):
-
     existing = session.exec(select(User).where(User.email == user_data.email)).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -45,7 +45,7 @@ def register(user_data: UserCreate, session: Session = Depends(get_session)):
         last_name=user_data.last_name,
         email=user_data.email,
         hashed_password=security.hash_password(user_data.password),
-        role = "business_owner"
+        role="business_owner"
     )
 
     session.add(new_user)
@@ -63,6 +63,7 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+
 @app.post("/login", response_model=Token)
 def login(request: LoginRequest, session: Session = Depends(get_session)):
     user = session.exec(select(User).where(User.email == request.email)).first()
@@ -74,6 +75,7 @@ def login(request: LoginRequest, session: Session = Depends(get_session)):
 
     return {"access_token": token, "token_type": "bearer"}
 
+
 @app.post("/users")
 def create_user(user: User, session: Session = Depends(get_session)):
     user.hashed_password = security.hash_password(user.hashed_password)
@@ -82,16 +84,19 @@ def create_user(user: User, session: Session = Depends(get_session)):
     session.refresh(user)
     return user
 
+
 @app.get("/users")
 def get_all_users(
-    session: Session = Depends(get_session)
+        session: Session = Depends(get_session)
 ):
     return session.exec(select(User)).all()
+
 
 @app.get("/users/{user_id}")
 def get_user(user_id: int, session: Session = Depends(get_session)):
     user = session.get(User, user_id)
     return user
+
 
 @app.get("/businesses/user/{user_id}")
 def get_businesses_by_user(user_id: int, session: Session = Depends(get_session)):
@@ -99,6 +104,7 @@ def get_businesses_by_user(user_id: int, session: Session = Depends(get_session)
         select(BusinessProfile).where(BusinessProfile.user_id == user_id)
     ).all()
     return businesses
+
 
 @app.put("/users/{user_id}", response_model=User)
 def update_user(user_id: int, updated_user: User, session: Session = Depends(get_session)):
@@ -109,6 +115,7 @@ def update_user(user_id: int, updated_user: User, session: Session = Depends(get
     session.commit()
     session.refresh(db_user)
     return db_user
+
 
 @app.delete("/users/{user_id}")
 def delete_user(user_id: int, session: Session = Depends(get_session)):
@@ -132,7 +139,7 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
     return {"message": "Użytkownik usunięty pomyślnie"}
 
 
-#Business CRUD
+# Business CRUD
 @app.post("/businesses", response_model=BusinessProfile)
 def create_business(business: BusinessProfile, session: Session = Depends(get_session)):
     session.add(business)
@@ -140,9 +147,11 @@ def create_business(business: BusinessProfile, session: Session = Depends(get_se
     session.refresh(business)
     return business
 
+
 @app.get("/businesses", response_model=List[BusinessProfile])
 def get_all_businesses(session: Session = Depends(get_session)):
     return session.exec(select(BusinessProfile)).all()
+
 
 @app.get("/businesses/{bp_id}")
 def get_business(bp_id: int, session: Session = Depends(get_session)):
@@ -165,6 +174,7 @@ def get_ads_by_business(bp_id: int, session: Session = Depends(get_session)):
         print(f"Błąd w get_ads_by_business: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Błąd pobierania ogłoszeń: {str(e)}")
 
+
 @app.put("/businesses/{bp_id}")
 def update_business(bp_id: int, updated_buisiness: BusinessProfile, session: Session = Depends(get_session)):
     db_bp = session.get(BusinessProfile, bp_id)
@@ -174,6 +184,7 @@ def update_business(bp_id: int, updated_buisiness: BusinessProfile, session: Ses
     session.commit()
     session.refresh(db_bp)
     return db_bp
+
 
 @app.delete("/businesses/{bp_id}")
 def delete_business(bp_id: int, session: Session = Depends(get_session)):
@@ -193,7 +204,8 @@ def delete_business(bp_id: int, session: Session = Depends(get_session)):
     session.commit()
     return {"message": "Profil biznesowy usunięty pomyślnie"}
 
-#AD CRUD
+
+# AD CRUD
 # Endpoint do tworzenia ogłoszenia
 @app.post("/ads", response_model=Ad)
 def create_ad(ad: Ad, session: Session = Depends(get_session)):
@@ -233,46 +245,39 @@ def get_ads_by_user(user_id: int, session: Session = Depends(get_session)):
         print(f"Błąd w get_ads_by_user: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Błąd pobierania ogłoszeń: {str(e)}")
 
+
 @app.get("/ads", response_model=List[Ad])
 def get_all_ads(
-    session: Session = Depends(get_session),
-    search: Optional[str] = None,
-    category_id: Optional[int] = None
+        session: Session = Depends(get_session),
+        search: Optional[str] = None,
+        category_id: Optional[int] = None
 ):
     # Podstawowe zapytanie
     statement = select(Ad)
-    
+
     # Filtrowanie po tekście (w tytule lub opisie)
     if search:
         search_filter = f"%{search}%"
         statement = statement.where(
             or_(
-                col(Ad.ad_title).ilike(search_filter), 
+                col(Ad.ad_title).ilike(search_filter),
                 col(Ad.description).ilike(search_filter)
             )
         )
-        
+
     # Filtrowanie po kategorii (wymaga join z tabelą łączącą AdCategory)
     if category_id:
         statement = statement.join(AdCategory).where(AdCategory.category_id == category_id)
-        
+
     return session.exec(statement).all()
 
 
-@app.delete("/ads/{ad_id}")
-def delete_ad(ad_id: int, session: Session = Depends(get_session)):
+@app.get("/ads/{ad_id}")
+def get_ad(ad_id: int, session: Session = Depends(get_session)):
     ad = session.get(Ad, ad_id)
     if not ad:
         raise HTTPException(status_code=404, detail="Ogłoszenie nie znalezione")
-
-    ad_categories = session.exec(select(AdCategory).where(AdCategory.ad_id == ad_id)).all()
-
-    for ad_category in ad_categories:
-        session.delete(ad_category)
-
-    session.delete(ad)
-    session.commit()
-    return {"message": "Ogłoszenie usunięte pomyślnie"}
+    return ad
 
 
 @app.put("/ads/{ad_id}")
@@ -298,6 +303,12 @@ def delete_ad(ad_id: int, session: Session = Depends(get_session)):
     ad = session.get(Ad, ad_id)
     if not ad:
         raise HTTPException(status_code=404, detail="Ogłoszenie nie znalezione")
+
+    ad_categories = session.exec(select(AdCategory).where(AdCategory.ad_id == ad_id)).all()
+
+    for ad_category in ad_categories:
+        session.delete(ad_category)
+
     session.delete(ad)
     session.commit()
     return {"message": "Ogłoszenie usunięte pomyślnie"}
@@ -325,7 +336,7 @@ def approve_ad(ad_id: int, session: Session = Depends(get_session)):
     return ad
 
 
-#Categories CRUD
+# Categories CRUD
 @app.post("/categories")
 def create_category(category: Categories, session: Session = Depends(get_session)):
     session.add(category)
@@ -333,14 +344,17 @@ def create_category(category: Categories, session: Session = Depends(get_session
     session.refresh(category)
     return category
 
+
 @app.get("/categories")
 def get_all_categories(session: Session = Depends(get_session)):
     return session.exec(select(Categories)).all()
+
 
 @app.get("/categories/{category_id}")
 def get_category(category_id: int, session: Session = Depends(get_session)):
     category = session.get(Categories, category_id)
     return category
+
 
 @app.put("/categories/{category_id}", response_model=Categories)
 def update_category(category_id: int, updated_category: Categories, session: Session = Depends(get_session)):
@@ -352,6 +366,7 @@ def update_category(category_id: int, updated_category: Categories, session: Ses
     session.refresh(db_category)
     return db_category
 
+
 @app.delete("/categories/{category_id}")
 def delete_category(category_id: int, session: Session = Depends(get_session)):
     db_category = session.get(Categories, category_id)
@@ -359,13 +374,15 @@ def delete_category(category_id: int, session: Session = Depends(get_session)):
     session.commit()
     return
 
-#AdCategories CRUD
+
+# AdCategories CRUD
 @app.post("/ad_categories")
 def create_ad_category(ad_category: AdCategory, session: Session = Depends(get_session)):
     session.add(ad_category)
     session.commit()
     session.refresh(ad_category)
     return ad_category
+
 
 @app.get("/ad_categories")
 def get_all_ad_categories(session: Session = Depends(get_session)):
@@ -376,18 +393,21 @@ def get_all_ad_categories(session: Session = Depends(get_session)):
 def get_ad_categories_by_ad(ad_id: int, session: Session = Depends(get_session)):
     return session.exec(select(AdCategory).where(AdCategory.ad_id == ad_id)).all()
 
+
 @app.get("/ad_categories/by_category/{category_id}")
 def get_ad_categories_by_category(category_id: int, session: Session = Depends(get_session)):
     return session.exec(select(AdCategory).where(AdCategory.category_id == category_id)).all()
 
+
 @app.get("/ad_categories/{ad_id}/{category_id}")
-def get_ad_category(category_id: int, ad_id: int,  session: Session = Depends(get_session)):
+def get_ad_category(category_id: int, ad_id: int, session: Session = Depends(get_session)):
     category = session.get(AdCategory, (ad_id, category_id))
     return category
 
 
 @app.put("/ad_categories/{ad_id}/{category_id}", response_model=AdCategory)
-def update_ad_category(category_id: int, ad_id: int, updated_ad_category: AdCategory, session: Session = Depends(get_session)):
+def update_ad_category(category_id: int, ad_id: int, updated_ad_category: AdCategory,
+                       session: Session = Depends(get_session)):
     db_ad_category = session.get(AdCategory, (ad_id, category_id))
     for key, value in updated_ad_category.dict().items():
         setattr(db_ad_category, key, value)
@@ -396,8 +416,9 @@ def update_ad_category(category_id: int, ad_id: int, updated_ad_category: AdCate
     session.refresh(db_ad_category)
     return db_ad_category
 
-@app.delete("/ad_categories/{ad_id}/{category_id}")#asidbasidabsdihbasihdbasd
-def delete_ad_category(category_id: int, ad_id: int,session: Session = Depends(get_session)):
+
+@app.delete("/ad_categories/{ad_id}/{category_id}")  # asidbasidabsdihbasihdbasd
+def delete_ad_category(category_id: int, ad_id: int, session: Session = Depends(get_session)):
     db_category = session.get(AdCategory, (ad_id, category_id))
     session.delete(db_category)
     session.commit()
