@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router';
+import {useNavigate, useParams} from 'react-router';
 import FloatingLogger from '../components/FloatingLogger';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -9,6 +9,7 @@ const AdPage = () => {
     const [ad, setAd] = useState(null);
     const [loading, setLoading] = useState(true);
     const [businessProfile, setBusinessProfile] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchAd = async () => {
@@ -103,10 +104,17 @@ const AdPage = () => {
                         </div>
 
                         <div className="mt-12 pt-6 border-t border-gray-100 flex justify-between items-center">
-                            <button className="bg-[#FE7F2D] hover:bg-[#E76F1F] text-white px-8 py-3 rounded font-bold transition-colors">
-                                Kontakt z firmą
-                            </button>
-
+                            <div className="flex gap-4">
+                                <button className="bg-[#FE7F2D] hover:bg-[#E76F1F] text-white px-8 py-3 rounded font-bold transition-colors">
+                                    Kontakt z firmą
+                                </button>
+                                <button
+                                    onClick={() => navigate(`/business/${ad.bp_id}`)}
+                                    className="bg-white hover:bg-gray-50 text-slate-700 px-8 py-3 rounded font-bold transition-colors border border-gray-200"
+                                >
+                                    Profil firmy
+                                </button>
+                            </div>
                         </div>
                     </div>
 

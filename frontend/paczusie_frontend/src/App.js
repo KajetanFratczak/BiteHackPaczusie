@@ -9,6 +9,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
 import WelcomePopup from './components/WelcomePopup';
+import BusinessProfilePage from './pages/BusinessProfilePage';
 
 function App() {
   return (
@@ -24,6 +25,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           {/* Strona rejestracji  */}
           <Route path="/register" element={<RegisterPage />} />
+
+            <Route path="/business/:bp_id" element={<BusinessProfilePage />} />
 
           {/* Protected Routes - dla admina oraz lokalnych przedsiębiorców */}
 

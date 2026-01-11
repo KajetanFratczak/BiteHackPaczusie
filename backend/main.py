@@ -133,6 +133,23 @@ def get_all_businesses(session: Session = Depends(get_session)):
 def get_business(bp_id: int, session: Session = Depends(get_session)):
     return session.get(BusinessProfile, bp_id)
 
+
+@app.get("/businesses/{bp_id}/ads")
+def get_ads_by_business(bp_id: int, session: Session = Depends(get_session)):
+    try:
+        business = session.get(BusinessProfile, bp_id)
+        if not business:
+            raise HTTPException(status_code=404, detail="Firma nie znaleziona")
+
+        ads = session.exec(
+            select(Ad).where(Ad.bp_id == bp_id)
+        ).all()
+
+        return ads
+    except Exception as e:
+        print(f"Błąd w get_ads_by_business: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Błąd pobierania ogłoszeń: {str(e)}")
+
 @app.put("/businesses/{bp_id}")
 def update_business(bp_id: int, updated_buisiness: BusinessProfile, session: Session = Depends(get_session)):
     db_bp = session.get(BusinessProfile, bp_id)
