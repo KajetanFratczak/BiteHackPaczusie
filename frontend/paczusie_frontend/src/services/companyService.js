@@ -1,11 +1,6 @@
 import api from './api';
 
 export const companyService = {
-    async getAll() {
-        const response = await api.get('/businesses');
-        return response.data;
-    },
-
     async getById(businessId) {
         const response = await api.get(`/businesses/${businessId}`);
         return response.data;

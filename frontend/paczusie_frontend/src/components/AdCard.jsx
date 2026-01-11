@@ -11,7 +11,7 @@ const AdCard = ({ id, title, description, price, address, images, categories }) 
     return numPrice.toLocaleString('pl-PL', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-    }) + ' PLN';
+    });
 };
 
   return (

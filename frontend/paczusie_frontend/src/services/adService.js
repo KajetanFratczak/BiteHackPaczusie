@@ -12,8 +12,6 @@ export const adService = {
     },
 
     async create(adData) {
-        // Status jest ustawiany na false w backendzie
-        // Nie musimy go wysyłać, backend zignoruje jeśli wyślemy
         const response = await api.post('/ads', adData);
         return response.data;
     },

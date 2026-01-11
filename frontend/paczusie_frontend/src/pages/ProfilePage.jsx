@@ -168,28 +168,24 @@ const ProfilePage = () => {
     };
 
     const handleDeleteBusiness = async (businessId) => {
-        if (window.confirm('Czy na pewno chcesz usunąć tę firmę?')) {
-            try {
-                await companyService.delete(businessId);
-                loadData();
-                showAlert('success', 'Firma została usunięta');
-            } catch (error) {
-                console.error('Błąd usuwania firmy: ', error);
-                setError('Nie udało się usunąć firmy');
-            }
+        try {
+            await companyService.delete(businessId);
+            loadData();
+            showAlert('success', 'Firma została usunięta');
+        } catch (error) {
+            console.error('Błąd usuwania firmy: ', error);
+            setError('Nie udało się usunąć firmy');
         }
     };
 
     const handleDeleteAd = async (adId) => {
-        if (window.confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) {
-            try {
-                await adService.delete(adId);
-                loadData();
-                showAlert('success', 'Ogłoszenie zostało usunięte');
-            } catch (error) {
-                console.error('Błąd usuwania ogłoszenia: ', error);
-                setError('Nie udało się usunąć ogłoszenia');
-            }
+        try {
+            await adService.delete(adId);
+            loadData();
+            showAlert('success', 'Ogłoszenie zostało usunięte');
+        } catch (error) {
+            console.error('Błąd usuwania ogłoszenia: ', error);
+            setError('Nie udało się usunąć ogłoszenia');
         }
     };
 

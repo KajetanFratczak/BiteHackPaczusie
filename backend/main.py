@@ -219,7 +219,6 @@ def delete_business(bp_id: int, session: Session = Depends(get_session)):
 # Endpoint do tworzenia ogłoszenia
 @app.post("/ads", response_model=Ad)
 def create_ad(ad: Ad, session: Session = Depends(get_session)):
-    # Zawsze ustaw status na False przy tworzeniu
     ad.status = False
     session.add(ad)
     session.commit()
@@ -230,7 +229,6 @@ def create_ad(ad: Ad, session: Session = Depends(get_session)):
 @app.get("/ads/user/{user_id}")
 def get_ads_by_user(user_id: int, session: Session = Depends(get_session)):
     try:
-        # 1. Znajdź firmy użytkownika
         businesses = session.exec(
             select(BusinessProfile).where(BusinessProfile.user_id == user_id)
         ).all()
@@ -238,10 +236,8 @@ def get_ads_by_user(user_id: int, session: Session = Depends(get_session)):
         if not businesses:
             return []
 
-        # 2. Zbierz ID firm
         business_ids = [b.bp_id for b in businesses]
         print(business_ids)
-        # 3. Pobierz ogłoszenia dla każdej firmy po kolei
         all_ads = []
         for bp_id in business_ids:
             ads_for_business = session.exec(
@@ -262,10 +258,8 @@ def get_all_ads(
         search: Optional[str] = None,
         category_id: Optional[int] = None
 ):
-    # Podstawowe zapytanie
     statement = select(Ad)
 
-    # Filtrowanie po tekście (w tytule lub opisie)
     if search:
         search_filter = f"%{search}%"
         statement = statement.where(
@@ -275,7 +269,6 @@ def get_all_ads(
             )
         )
 
-    # Filtrowanie po kategorii (wymaga join z tabelą łączącą AdCategory)
     if category_id:
         statement = statement.join(AdCategory).where(AdCategory.category_id == category_id)
 
@@ -296,8 +289,6 @@ def update_ad(ad_id: int, updated_ad: Ad, session: Session = Depends(get_session
     if not db_ad:
         raise HTTPException(status_code=404, detail="Ogłoszenie nie znalezione")
 
-    # Aktualizuj tylko pola, które są podane w requeście
-    # Możesz dodać zabezpieczenie przed zmianą statusu dla nie-adminów
     update_data = updated_ad.dict(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_ad, key, value)
@@ -443,21 +434,17 @@ def delete_ad_category(category_id: int, ad_id: int, session: Session = Depends(
 @app.get("/reviews/ad/{ad_id}")
 def get_reviews_by_ad(ad_id: int, session: Session = Depends(get_session)):
     try:
-        # Sprawdź czy ogłoszenie istnieje
         ad = session.get(Ad, ad_id)
         if not ad:
             raise HTTPException(status_code=404, detail="Ogłoszenie nie znalezione")
 
-        # Pobierz recenzje z informacjami o użytkowniku
         reviews = session.exec(
             select(Reviews).where(Reviews.ad_id == ad_id)
         ).all()
 
-        # Dla każdej recenzji dodaj informacje o użytkowniku
         reviews_with_user = []
         for review in reviews:
             review_dict = review.dict()
-            # Możesz dodać logikę do pobierania nazwy użytkownika jeśli potrzebne
             reviews_with_user.append(review_dict)
 
         return reviews_with_user
