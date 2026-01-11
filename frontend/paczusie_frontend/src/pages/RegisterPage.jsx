@@ -51,8 +51,43 @@ const RegisterPage = () => {
         try{
             const result = await register(name, surname, email, password);
             if (result.success) {
-                alert("Rejestracja zakończona sukcesem! Możesz się teraz zalogować.");
-                navigate("/login");
+                // Ulepszony alert sukcesu
+                const successMessage = "Rejestracja zakończona sukcesem! Możesz się teraz zalogować.";
+                setError(""); // Czyszczenie błędów
+
+                // Tymczasowy alert sukcesu
+                const successDiv = document.createElement('div');
+                successDiv.className = 'mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-emerald-200 rounded-xl shadow-sm';
+                successDiv.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0 mt-0.5">
+                            <div class="w-8 h-8 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
+                                <span class="text-emerald-500 text-lg">✅</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-emerald-700 font-semibold mb-1">Sukces!</h3>
+                            <p class="text-emerald-600 text-sm leading-relaxed">${successMessage}</p>
+                        </div>
+                    </div>
+                `;
+
+                const formContainer = document.querySelector('.p-8');
+                if (formContainer) {
+                    const firstChild = formContainer.firstChild;
+                    formContainer.insertBefore(successDiv, firstChild.nextSibling);
+
+                    // Usuń alert po 3 sekundach
+                    setTimeout(() => {
+                        if (successDiv.parentNode) {
+                            successDiv.parentNode.removeChild(successDiv);
+                        }
+                        navigate("/login");
+                    }, 7000);
+                } else {
+                    alert(successMessage);
+                    navigate("/login");
+                }
             } else {
                 setError(result.msg || "Błąd rejestracji.");
             }
@@ -84,14 +119,24 @@ const RegisterPage = () => {
                         </div>
 
                         {error && (
-                            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
-                                <div className="flex">
-                                    <div className="flex-shrink-0">
-                                        <span className="text-red-500">⚠️</span>
+                            <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl shadow-sm">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                        <div className="w-8 h-8 bg-gradient-to-br from-red-100 to-rose-100 rounded-full flex items-center justify-center">
+                                            <span className="text-red-500 text-lg">⚠️</span>
+                                        </div>
                                     </div>
-                                    <div className="ml-3">
-                                        <p className="text-sm text-red-700">{error}</p>
+                                    <div className="flex-1">
+                                        <h3 className="text-red-700 font-semibold mb-1">Uwaga!</h3>
+                                        <p className="text-red-600 text-sm leading-relaxed">{error}</p>
                                     </div>
+                                    <button
+                                        onClick={() => setError("")}
+                                        className="flex-shrink-0 text-red-400 hover:text-red-600 transition-colors"
+                                        aria-label="Zamknij alert"
+                                    >
+                                        <span className="text-xl">×</span>
+                                    </button>
                                 </div>
                             </div>
                         )}

@@ -22,7 +22,7 @@ const AdPage = () => {
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [newReview, setNewReview] = useState({ title: '', description: '', rating: 5 });
     const [reviewLoading, setReviewLoading] = useState(false);
-    const [user, setUser] = useState(null);
+    const [alert, setAlert] = useState({ type: '', message: '' });
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -38,18 +38,6 @@ const AdPage = () => {
         };
         fetchAd();
     }, [id]);
-
-    useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const response = await api.get('/me');
-                setUser(response.data);
-            } catch (error) {
-                console.error('Błąd pobierania danych użytkownika:', error);
-            }
-        };
-        fetchUser();
-    }, []);
 
     useEffect(() => {
         const bpId = ad?.bp_id;
@@ -89,24 +77,40 @@ const AdPage = () => {
         fetchReviews();
     }, [id]);
 
+    const showAlert = (type, message) => {
+        setAlert({ type, message });
+        setTimeout(() => setAlert({ type: '', message: '' }), 5000);
+    };
+
     const handleSubmitReview = async (e) => {
         e.preventDefault();
-        if (!user) {
-            alert('Musisz być zalogowany, aby dodać recenzję');
+
+        // Walidacja
+        if (!newReview.title.trim()) {
+            showAlert('error', 'Proszę podać tytuł recenzji');
+            return;
+        }
+        if (!newReview.description.trim()) {
+            showAlert('error', 'Proszę podać opis recenzji');
+            return;
+        }
+        if (newReview.rating < 1 || newReview.rating > 5) {
+            showAlert('error', 'Ocena musi być w zakresie od 1 do 5');
             return;
         }
 
         setReviewLoading(true);
         try {
             const reviewData = {
-                ...newReview,
+                title: newReview.title.trim(),
+                description: newReview.description.trim(),
                 ad_id: parseInt(id),
                 rating: parseFloat(newReview.rating)
             };
 
             const response = await api.post('/reviews', reviewData);
 
-            // Dodaj nową recenzję do listy
+            // Dodaj nową recenzję do listy - recenzje są anonimowe
             setReviews([...reviews, response.data]);
 
             // Oblicz nową średnią
@@ -120,44 +124,17 @@ const AdPage = () => {
             setNewReview({ title: '', description: '', rating: 5 });
             setShowReviewForm(false);
 
-            alert('Recenzja dodana pomyślnie!');
+            showAlert('success', 'Recenzja dodana pomyślnie! Dziękujemy za opinię.');
         } catch (error) {
             console.error('Błąd dodawania recenzji: ', error);
-            alert('Wystąpił błąd podczas dodawania recenzji');
+            showAlert('error', 'Wystąpił błąd podczas dodawania recenzji. Spróbuj ponownie.');
         } finally {
             setReviewLoading(false);
         }
     };
 
-    const handleDeleteReview = async (reviewId) => {
-        if (!window.confirm('Czy na pewno chcesz usunąć tę recenzję?')) return;
-
-        try {
-            await api.delete(`/reviews/${reviewId}`);
-            setReviews(reviews.filter(review => review.review_id !== reviewId));
-
-            // Przelicz średnią
-            const deletedReview = reviews.find(r => r.review_id === reviewId);
-            if (deletedReview && averageRating.count > 1) {
-                const newTotal = averageRating.average * averageRating.count - deletedReview.rating;
-                const newCount = averageRating.count - 1;
-                setAverageRating({
-                    average: newTotal / newCount,
-                    count: newCount
-                });
-            } else {
-                setAverageRating({ average: 0, count: 0 });
-            }
-
-            alert('Recenzja usunięta pomyślnie');
-        } catch (error) {
-            console.error('Błąd usuwania recenzji: ', error);
-            alert('Wystąpił błąd podczas usuwania recenzji');
-        }
-    };
-
     if (loading) return (
-        <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen">
+        <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen">
             <Navbar />
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <div className="relative">
@@ -170,7 +147,7 @@ const AdPage = () => {
     );
 
     if (!ad) return (
-        <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen">
+        <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen">
             <Navbar />
             <div className="max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center">
                 <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-6">
@@ -193,6 +170,54 @@ const AdPage = () => {
     return (
         <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen pb-12">
             <Navbar />
+
+            {/* Alerty */}
+            {alert.message && (
+                <div className="fixed top-4 right-4 z-50 max-w-md">
+                    <div className={`p-4 rounded-xl shadow-lg border ${
+                        alert.type === 'success' 
+                            ? 'bg-green-50 border-green-200' 
+                            : 'bg-red-50 border-red-200'
+                    }`}>
+                        <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 mt-0.5">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    alert.type === 'success'
+                                        ? 'bg-green-100'
+                                        : 'bg-red-100'
+                                }`}>
+                                    <span className={`text-lg ${
+                                        alert.type === 'success' ? 'text-green-600' : 'text-red-600'
+                                    }`}>
+                                        {alert.type === 'success' ? '✓' : '!'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className={`font-semibold mb-1 ${
+                                    alert.type === 'success' ? 'text-green-800' : 'text-red-800'
+                                }`}>
+                                    {alert.type === 'success' ? 'Sukces' : 'Błąd'}
+                                </h3>
+                                <p className={`text-sm ${
+                                    alert.type === 'success' ? 'text-green-700' : 'text-red-700'
+                                }`}>
+                                    {alert.message}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setAlert({ type: '', message: '' })}
+                                className={`flex-shrink-0 ${
+                                    alert.type === 'success' ? 'text-green-500 hover:text-green-700' : 'text-red-500 hover:text-red-700'
+                                } transition-colors`}
+                                aria-label="Zamknij alert"
+                            >
+                                <span className="text-xl">×</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
                 <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 mb-8">
@@ -366,15 +391,13 @@ const AdPage = () => {
                                     </div>
                                 </div>
                             </div>
-                            {user && (
-                                <button
-                                    onClick={() => setShowReviewForm(true)}
-                                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center"
-                                >
-                                    <Plus size={20} className="mr-2" />
-                                    Dodaj recenzję
-                                </button>
-                            )}
+                            <button
+                                onClick={() => setShowReviewForm(true)}
+                                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center"
+                            >
+                                <Plus size={20} className="mr-2" />
+                                Dodaj recenzję
+                            </button>
                         </div>
                     </div>
 
@@ -403,7 +426,11 @@ const AdPage = () => {
                                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Podaj tytuł recenzji"
                                         required
+                                        maxLength={100}
                                     />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Maksymalnie 100 znaków
+                                    </p>
                                 </div>
 
                                 <div>
@@ -416,7 +443,7 @@ const AdPage = () => {
                                                 key={star}
                                                 type="button"
                                                 onClick={() => setNewReview({...newReview, rating: star})}
-                                                className="p-1"
+                                                className="p-1 hover:scale-110 transition-transform"
                                             >
                                                 <Star
                                                     size={32}
@@ -424,7 +451,7 @@ const AdPage = () => {
                                                         star <= newReview.rating 
                                                             ? 'fill-amber-400 text-amber-400' 
                                                             : 'fill-gray-200 text-gray-200'
-                                                    } hover:scale-110 transition-transform`}
+                                                    }`}
                                                 />
                                             </button>
                                         ))}
@@ -432,6 +459,9 @@ const AdPage = () => {
                                             {newReview.rating.toFixed(1)} / 5.0
                                         </span>
                                     </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Kliknij gwiazdkę, aby wybrać ocenę
+                                    </p>
                                 </div>
 
                                 <div>
@@ -444,7 +474,11 @@ const AdPage = () => {
                                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px]"
                                         placeholder="Opisz swoje doświadczenia..."
                                         required
+                                        maxLength={1000}
                                     />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Maksymalnie 1000 znaków
+                                    </p>
                                 </div>
 
                                 <div className="flex justify-end gap-4">
@@ -458,7 +492,7 @@ const AdPage = () => {
                                     <button
                                         type="submit"
                                         disabled={reviewLoading}
-                                        className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center disabled:opacity-50"
+                                        className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {reviewLoading ? (
                                             <>
@@ -488,14 +522,12 @@ const AdPage = () => {
                                 <p className="text-gray-600 mb-8">
                                     Ten produkt nie ma jeszcze żadnych recenzji. Bądź pierwszy!
                                 </p>
-                                {!user && (
-                                    <button
-                                        onClick={() => navigate('/login')}
-                                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg"
-                                    >
-                                        Zaloguj się, aby dodać recenzję
-                                    </button>
-                                )}
+                                <button
+                                    onClick={() => setShowReviewForm(true)}
+                                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg"
+                                >
+                                    Dodaj pierwszą recenzję
+                                </button>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -503,8 +535,6 @@ const AdPage = () => {
                                     <ReviewCard
                                         key={review.review_id}
                                         review={review}
-                                        currentUserId={user?.user_id}
-                                        onDelete={handleDeleteReview}
                                     />
                                 ))}
                             </div>
