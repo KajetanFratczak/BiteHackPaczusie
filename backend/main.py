@@ -5,11 +5,12 @@ from typing import List, Optional
 
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import Session, select, col
 from database.database import create_db_and_tables, get_session
 from database.models import User, BusinessProfile, Categories, Ad, AdCategory
 from schemas import Token, UserCreate, UserRead
 import security
+from sqlalchemy import or_
 
 
 app = FastAPI()
@@ -190,8 +191,29 @@ def get_ads_by_user(user_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=500, detail=f"Błąd pobierania ogłoszeń: {str(e)}")
 
 @app.get("/ads", response_model=List[Ad])
-def get_all_ads(session: Session = Depends(get_session)):
-    return session.exec(select(Ad)).all()
+def get_all_ads(
+    session: Session = Depends(get_session),
+    search: Optional[str] = None,
+    category_id: Optional[int] = None
+):
+    # Podstawowe zapytanie
+    statement = select(Ad)
+    
+    # Filtrowanie po tekście (w tytule lub opisie)
+    if search:
+        search_filter = f"%{search}%"
+        statement = statement.where(
+            or_(
+                col(Ad.ad_title).ilike(search_filter), 
+                col(Ad.description).ilike(search_filter)
+            )
+        )
+        
+    # Filtrowanie po kategorii (wymaga join z tabelą łączącą AdCategory)
+    if category_id:
+        statement = statement.join(AdCategory).where(AdCategory.category_id == category_id)
+        
+    return session.exec(statement).all()
 
 
 @app.get("/ads/{ad_id}")
