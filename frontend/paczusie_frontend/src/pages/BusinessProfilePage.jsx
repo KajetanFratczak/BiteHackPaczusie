@@ -353,7 +353,9 @@ const AdCard = ({ ad, onClick }) => {
                     <div className="text-center">
                         <div className="text-sm font-medium text-gray-500 mb-1">Cena</div>
                         <div className="text-2xl lg:text-3xl font-black text-slate-900">
-                            {formatPrice(ad.price)}
+                            <span className="text-4xl font-black text-slate-900">
+                                {formatPrice(ad.price)}
+                            </span>
                         </div>
                     </div>
                 </div>
