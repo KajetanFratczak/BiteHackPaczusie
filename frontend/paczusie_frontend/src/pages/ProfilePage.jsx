@@ -43,7 +43,7 @@ const ProfilePage = () => {
     setLoading(true);
     try {
         const [businessesData, categoriesData, adsData] = await Promise.all([
-            companyService.getByUserId(user.id),
+            companyService.getByUserId(user.id), //poprawka
             categoryService.getAll(),
             adService.getByUserId(user.id) // Zakładając, że user.id istnieje
         ]);
