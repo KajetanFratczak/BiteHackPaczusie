@@ -4,7 +4,13 @@ import FloatingLogger from '../components/FloatingLogger';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 import ReviewCard from '../components/ReviewCard';
-import { MessageSquare, Star, Plus, Send, X } from 'lucide-react';
+import { 
+    MessageSquare, 
+    Star, 
+    Plus, 
+    Send, 
+    X 
+} from 'lucide-react';
 
 const getReviewDeclension = (count) => {
     if (count === 1) return 'recenzja';
@@ -14,30 +20,29 @@ const getReviewDeclension = (count) => {
 
 const AdPage = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
+
+    // Stany danych
     const [ad, setAd] = useState(null);
     const [loading, setLoading] = useState(true);
     const [businessProfile, setBusinessProfile] = useState(null);
     const [reviews, setReviews] = useState([]);
     const [averageRating, setAverageRating] = useState({ average: 0, count: 0 });
+
+    // Stany UI
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [newReview, setNewReview] = useState({ title: '', description: '', rating: 5 });
     const [reviewLoading, setReviewLoading] = useState(false);
-    const [user, setUser] = useState(null);
-    
-    // NOWY STAN: indeks aktualnie wyświetlanego zdjęcia
-    const [activeImageIndex, setActiveImageIndex] = useState(0);
-    
-    const navigate = useNavigate();
+    const [alert, setAlert] = useState({ type: '', message: '' });
 
     useEffect(() => {
         const fetchAd = async () => {
             try {
                 const response = await api.get(`/ads/${id}`);
                 setAd(response.data);
-                // Resetujemy indeks przy ładowaniu nowego ogłoszenia
-                setActiveImageIndex(0);
             } catch (error) {
-                console.error('Błąd pobierania ogłoszenia: ', error);
+                console.error('Błąd pobierania ogłoszenia:', error);
             } finally {
                 setLoading(false);
             }
@@ -46,26 +51,13 @@ const AdPage = () => {
     }, [id]);
 
     useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const response = await api.get('/me');
-                setUser(response.data);
-            } catch (error) {
-                console.error('Błąd pobierania danych użytkownika:', error);
-            }
-        };
-        fetchUser();
-    }, []);
-
-    useEffect(() => {
-        const bpId = ad?.bp_id;
-        if (bpId !== undefined && bpId !== null) {
+        if (ad?.bp_id) {
             const fetchBusinessProfile = async () => {
                 try {
-                    const response = await api.get(`/businesses/${bpId}`);
+                    const response = await api.get(`/businesses/${ad.bp_id}`);
                     setBusinessProfile(response.data);
                 } catch (error) {
-                    console.error('Błąd pobierania profilu biznesu: ', error);
+                    console.error('Błąd profilu:', error);
                 }
             };
             fetchBusinessProfile();
@@ -73,299 +65,265 @@ const AdPage = () => {
     }, [ad]);
 
     useEffect(() => {
+        if (!id) return;
         const fetchReviews = async () => {
-            if (!id) return;
             try {
                 const response = await api.get(`/reviews/ad/${id}`);
                 setReviews(response.data);
                 if (response.data.length > 0) {
-                    const avg = response.data.reduce((sum, review) => sum + review.rating, 0) / response.data.length;
+                    const avg = response.data.reduce((sum, r) => sum + r.rating, 0) / response.data.length;
                     setAverageRating({ average: avg, count: response.data.length });
                 }
             } catch (error) {
-                console.error('Błąd pobierania recenzji: ', error);
+                console.error('Błąd recenzji:', error);
             }
         };
         fetchReviews();
     }, [id]);
 
+    const showAlert = (type, message) => {
+        setAlert({ type, message });
+        setTimeout(() => setAlert({ type: '', message: '' }), 5000);
+    };
+
     const handleSubmitReview = async (e) => {
         e.preventDefault();
-        if (!user) {
-            alert('Musisz być zalogowany, aby dodać recenzję');
+        if (!newReview.title.trim() || !newReview.description.trim()) {
+            showAlert('error', 'Wypełnij wszystkie pola');
             return;
         }
+
         setReviewLoading(true);
         try {
             const reviewData = {
-                ...newReview,
+                title: newReview.title.trim(),
+                description: newReview.description.trim(),
                 ad_id: parseInt(id),
                 rating: parseFloat(newReview.rating)
             };
             const response = await api.post('/reviews', reviewData);
-            setReviews([...reviews, response.data]);
-            const newAvg = (averageRating.average * averageRating.count + reviewData.rating) / (averageRating.count + 1);
-            setAverageRating({ average: newAvg, count: averageRating.count + 1 });
+            setReviews([response.data, ...reviews]);
+            
+            const newCount = averageRating.count + 1;
+            const newAvg = (averageRating.average * averageRating.count + reviewData.rating) / newCount;
+            setAverageRating({ average: newAvg, count: newCount });
+
             setNewReview({ title: '', description: '', rating: 5 });
             setShowReviewForm(false);
-            alert('Recenzja dodana pomyślnie!');
+            showAlert('success', 'Recenzja dodana pomyślnie!');
         } catch (error) {
-            console.error('Błąd dodawania recenzji: ', error);
-            alert('Wystąpił błąd podczas dodawania recenzji');
+            showAlert('error', 'Błąd podczas dodawania recenzji.');
         } finally {
             setReviewLoading(false);
         }
     };
 
-    const handleDeleteReview = async (reviewId) => {
-        if (!window.confirm('Czy na pewno chcesz usunąć tę recenzję?')) return;
-        try {
-            await api.delete(`/reviews/${reviewId}`);
-            setReviews(reviews.filter(review => review.review_id !== reviewId));
-            const deletedReview = reviews.find(r => r.review_id === reviewId);
-            if (deletedReview && averageRating.count > 1) {
-                const newTotal = averageRating.average * averageRating.count - deletedReview.rating;
-                const newCount = averageRating.count - 1;
-                setAverageRating({ average: newTotal / newCount, count: newCount });
-            } else {
-                setAverageRating({ average: 0, count: 0 });
-            }
-            alert('Recenzja usunięta pomyślnie');
-        } catch (error) {
-            console.error('Błąd usuwania recenzji: ', error);
-            alert('Wystąpił błąd podczas usuwania recenzji');
-        }
-    };
-
     if (loading) return (
-        <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen">
-            <Navbar />
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                <div className="relative">
-                    <div className="absolute inset-0 animate-ping rounded-full h-16 w-16 bg-[#FE7F2D]/20"></div>
-                    <div className="relative animate-spin rounded-full h-16 w-16 border-t-3 border-b-3 border-[#FE7F2D]"></div>
-                </div>
-                <p className="mt-6 text-gray-600 font-medium text-lg">Ładowanie ogłoszenia...</p>
-            </div>
+        <div className="bg-[#FDF6E3] min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-[#FE7F2D]"></div>
         </div>
     );
 
-    if (!ad) return (
-        <div className="bg-gradient-to-b from-[#F5FBE6] to-gray-50 min-h-screen">
-            <Navbar />
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center">
-                <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-6">
-                    <span className="text-5xl">❌</span>
-                </div>
-                <h1 className="text-3xl font-bold text-slate-900 mb-4">Ogłoszenie nie istnieje</h1>
-                <p className="text-gray-600 text-lg mb-8">Ogłoszenie, które próbujesz wyświetlić, zostało usunięte lub nie istnieje.</p>
-                <button onClick={() => navigate('/')} className="bg-gradient-to-r from-[#FE7F2D] to-orange-500 hover:from-[#E76F1F] hover:to-orange-600 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg">
-                    Wróć do strony głównej
-                </button>
-            </div>
-        </div>
-    );
+    if (!ad) return <div className="text-center py-20 font-bold">Ogłoszenie nie istnieje</div>;
 
     return (
         <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen pb-12">
             <Navbar />
 
+            {alert.message && (
+                <div className={`fixed top-24 right-4 z-50 p-4 rounded-xl shadow-2xl border ${
+                    alert.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
+                }`}>
+                    {alert.message}
+                </div>
+            )}
+
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 mb-8">
-                    {/* Nagłówek */}
-                    <div className="p-8 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-gray-50">
-                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                            <div className="flex-1">
-                                <div className="flex items-center mb-3">
-                                    <span className={`text-xs font-bold px-3 py-1.5 rounded-full mr-3 ${ad.status ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                        {ad.status ? '✅ AKTYWNE' : '⏳ OCZEKUJĄCE'}
-                                    </span>
-                                </div>
-                                <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-3">{ad.ad_title}</h1>
-                                <div className="flex items-center text-gray-600">
-                                    <span className="mr-2 text-[#FE7F2D]">📍</span>
+                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200 mb-8">
+                    
+                    {/* Header */}
+                    <div className="p-8 border-b border-gray-100 bg-slate-50/50">
+                        <div className="flex flex-col lg:flex-row justify-between gap-6">
+                            <div>
+                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${ad.status ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                    {ad.status ? '✅ AKTYWNE' : '⏳ OCZEKUJĄCE'}
+                                </span>
+                                <h1 className="text-3xl font-black text-slate-900 mb-2">{ad.ad_title}</h1>
+                                <div className="flex items-center text-gray-500">
+                                    <span className="mr-2">📍</span>
                                     <span className="text-lg">{ad.address}</span>
                                 </div>
                             </div>
-                            <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-xl border border-orange-100 min-w-[200px] text-center">
-                                <span className="text-xs text-gray-500 uppercase font-semibold tracking-wider block mb-2">CENA</span>
-                                <span className="text-4xl font-black text-slate-900">{ad.price || '0 zł'}</span>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center min-w-[180px]">
+                                <span className="text-xs text-gray-400 uppercase font-bold block mb-1">Cena usługi</span>
+                                <span className="text-4xl font-black text-[#FE7F2D]">{ad.price || '0 zł'}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex flex-col lg:flex-row">
-                        {/* Lewa kolumna - GALERIA ZDJĘĆ */}
-                        <div className="lg:w-2/5 p-8 bg-gray-50/50 border-r border-gray-100">
-                            <div className="mb-8">
-                                {/* Główne zdjęcie */}
-                                <div className="aspect-square w-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden mb-4 shadow-lg border border-gray-300">
-                                    {ad.images && ad.images.length > 0 ? (
-                                        <img
-                                            src={ad.images[activeImageIndex]}
-                                            alt={ad.ad_title}
-                                            className="object-cover w-full h-full transition-opacity duration-300"
-                                        />
-                                    ) : (
-                                        <div className="flex items-center justify-center w-full h-full">
-                                            <span className="text-5xl text-gray-400">🖼️</span>
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {/* Miniaturki (wyświetlane jeśli jest > 0 zdjęć) */}
-                                {ad.images && ad.images.length > 1 && (
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {ad.images.map((img, index) => (
-                                            <div 
-                                                key={index} 
-                                                onClick={() => setActiveImageIndex(index)}
-                                                className={`aspect-square rounded-lg overflow-hidden cursor-pointer transition-all border-2 ${
-                                                    activeImageIndex === index 
-                                                    ? 'border-[#FE7F2D] scale-95' 
-                                                    : 'border-transparent hover:border-gray-300'
-                                                }`}
-                                            >
-                                                <img
-                                                    src={img}
-                                                    alt={`${ad.ad_title} thumbnail ${index + 1}`}
-                                                    className="object-cover w-full h-full"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
+                        {/* Lewa kolumna: Galeria */}
+                        <div className="lg:w-1/2 p-8 border-r border-gray-100 bg-gray-50/30">
+                            <div className="aspect-video bg-white rounded-2xl overflow-hidden shadow-inner border border-gray-200 mb-4">
+                                {ad.images?.length > 0 ? (
+                                    <img 
+                                        src={ad.images[activeImageIndex]} 
+                                        className="w-full h-full object-cover transition-opacity duration-300"
+                                        alt="Podgląd główny" 
+                                    />
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-gray-400 italic">Brak zdjęć</div>
                                 )}
                             </div>
 
-                            {/* Szczegóły ogłoszenia */}
-                            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
-                                    <span className="mr-2">📋</span> Szczegóły ogłoszenia
-                                </h3>
-                                <div className="space-y-4">
-                                    <InfoRow label="Nazwa Firmy" value={businessProfile ? businessProfile.bp_name : "Ładowanie..."} icon="🏢" loading={!businessProfile} />
-                                    <InfoRow label="Data publikacji" value={ad.post_date} icon="📅" />
-                                    <InfoRow label="Termin wygaśnięcia" value={ad.due_date} icon="⏰" />
-                                    <InfoRow label="Status" value={ad.status ? "Aktywne" : "Oczekuje"} icon={ad.status ? "✅" : "⏳"} isStatus statusValue={ad.status} />
-                                </div>
+                            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                                {ad.images?.map((img, idx) => (
+                                    <button 
+                                        key={idx}
+                                        onClick={() => setActiveImageIndex(idx)}
+                                        className={`relative flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-4 transition-all ${
+                                            activeImageIndex === idx ? 'border-[#FE7F2D] scale-95' : 'border-transparent opacity-60 hover:opacity-100'
+                                        }`}
+                                    >
+                                        <img src={img} className="w-full h-full object-cover" alt="" />
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Prawa kolumna - Opis i akcje */}
-                        <div className="lg:w-3/5 p-8">
+                        {/* Prawa kolumna */}
+                        <div className="lg:w-1/2 p-8">
                             <div className="mb-8">
-                                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
-                                    <span className="mr-2">📄</span> Opis ogłoszenia
+                                <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                                    <MessageSquare className="mr-2 text-[#FE7F2D]" size={20} />
+                                    O usłudze
                                 </h3>
-                                <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-                                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{ad.description || "Brak opisu"}</p>
+                                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                                    <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                                        {ad.description || "Brak szczegółowego opisu."}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                                <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                    <span className="text-xs text-gray-400 font-bold block mb-1">DODANO</span>
+                                    <div className="flex items-center text-slate-700">
+                                        <span className="mr-2">📅</span> {ad.post_date}
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                    <span className="text-xs text-gray-400 font-bold block mb-1">WAŻNE DO</span>
+                                    <div className="flex items-center text-slate-700">
+                                        <span className="mr-2">⏰</span> {ad.due_date}
+                                    </div>
                                 </div>
                             </div>
 
                             {businessProfile && (
-                                <div className="mb-8">
-                                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
-                                        <span className="mr-2">🏢</span> Informacje o firmie
-                                    </h3>
-                                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-100">
-                                        <h4 className="text-xl font-bold text-slate-900 mb-2">{businessProfile.bp_name}</h4>
-                                        {businessProfile.description && <p className="text-gray-600 mb-4">{businessProfile.description}</p>}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {businessProfile.address && <div className="flex items-center text-gray-500"><span className="mr-2">📍</span>{businessProfile.address}</div>}
-                                            {businessProfile.phone && <div className="flex items-center text-gray-500"><span className="mr-2">📞</span>{businessProfile.phone}</div>}
+                                <div className="bg-[#FE7F2D]/5 rounded-2xl p-6 border border-[#FE7F2D]/10">
+                                    <div className="flex items-center mb-4">
+                                        <div className="w-12 h-12 bg-[#FE7F2D] rounded-full flex items-center justify-center text-white mr-4 font-bold text-xl">
+                                            🏢
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-900">{businessProfile.bp_name}</h4>
+                                            <p className="text-sm text-gray-500">{businessProfile.address}</p>
                                         </div>
                                     </div>
-                                </div>
-                            )}
-
-                            <div className="mt-8 pt-8 border-t border-gray-200">
-                                <div className="flex flex-col sm:flex-row gap-4">
-                                    {businessProfile && (
-                                        <button onClick={() => navigate(`/business/${ad.bp_id}`)} className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center justify-center">
-                                            <span className="mr-2">🏢</span> Profil firmy
-                                        </button>
-                                    )}
-                                    <button onClick={() => navigate('/')} className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center justify-center">
-                                        <span className="mr-2">←</span> Wróć
+                                    <button 
+                                        onClick={() => navigate(`/business/${ad.bp_id}`)}
+                                        className="w-full bg-[#FE7F2D] hover:bg-[#e66f24] text-white font-bold py-3 rounded-xl transition-colors shadow-lg"
+                                    >
+                                        Zobacz Profil Firmy
                                     </button>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {/* Sekcja Recenzji */}
-                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
-                    <div className="p-8 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50">
-                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center">
-                                    <MessageSquare className="mr-3 text-purple-600" size={28} />
-                                    Recenzje klientów
-                                </h2>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center">
-                                        <Star className="fill-amber-400 text-amber-400 mr-1" size={20} />
-                                        <span className="text-2xl font-bold text-slate-900">{averageRating.average.toFixed(1)}</span>
-                                    </div>
-                                    <div className="text-gray-600 font-medium">{averageRating.count} {getReviewDeclension(averageRating.count)}</div>
+                {/* Recenzje */}
+                <div className="mt-12">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                        <div>
+                            <h2 className="text-3xl font-black text-slate-900">Opinie klientów</h2>
+                            <div className="flex items-center mt-2">
+                                <div className="flex text-amber-400 mr-3">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star key={i} size={20} fill={i < Math.round(averageRating.average) ? "currentColor" : "none"} />
+                                    ))}
                                 </div>
+                                <span className="font-bold text-lg">{averageRating.average.toFixed(1)}</span>
+                                <span className="text-gray-400 ml-2">({averageRating.count} {getReviewDeclension(averageRating.count)})</span>
                             </div>
-                            {user && (
-                                <button onClick={() => setShowReviewForm(true)} className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg flex items-center">
-                                    <Plus size={20} className="mr-2" /> Dodaj recenzję
-                                </button>
-                            )}
                         </div>
+                        <button 
+                            onClick={() => setShowReviewForm(true)}
+                            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-bold transition-all"
+                        >
+                            <Plus size={20} /> Dodaj opinię
+                        </button>
                     </div>
 
                     {showReviewForm && (
-                        <div className="p-8 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-cyan-50">
+                        <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 mb-8 animate-in fade-in slide-in-from-top-4">
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-slate-900">Dodaj nową recenzję</h3>
-                                <button onClick={() => setShowReviewForm(false)} className="p-2 text-gray-500 hover:text-gray-700"><X size={24} /></button>
+                                <h3 className="text-xl font-bold">Twoja opinia</h3>
+                                <button onClick={() => setShowReviewForm(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
                             </div>
-                            <form onSubmit={handleSubmitReview} className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Tytuł *</label>
-                                    <input type="text" value={newReview.title} onChange={(e) => setNewReview({...newReview, title: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="Tytuł recenzji" required />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Ocena *</label>
-                                    <div className="flex items-center gap-1">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                            <button key={star} type="button" onClick={() => setNewReview({...newReview, rating: star})} className="p-1">
-                                                <Star size={32} className={`${star <= newReview.rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'} hover:scale-110 transition-transform`} />
-                                            </button>
-                                        ))}
+                            <form onSubmit={handleSubmitReview} className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Tytuł opinii..."
+                                            className="w-full p-4 bg-gray-50 rounded-xl border border-gray-100 focus:ring-2 focus:ring-[#FE7F2D] outline-none"
+                                            value={newReview.title}
+                                            onChange={(e) => setNewReview({...newReview, title: e.target.value})}
+                                        />
+                                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                            <span className="font-bold text-sm text-gray-500">Ocena:</span>
+                                            <div className="flex gap-1">
+                                                {[1,2,3,4,5].map(num => (
+                                                    <Star 
+                                                        key={num} 
+                                                        size={24} 
+                                                        className="cursor-pointer transition-colors"
+                                                        fill={num <= newReview.rating ? "#FBBF24" : "none"}
+                                                        color={num <= newReview.rating ? "#FBBF24" : "#D1D5DB"}
+                                                        onClick={() => setNewReview({...newReview, rating: num})}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
+                                    <textarea 
+                                        placeholder="Opisz swoje wrażenia..."
+                                        rows="5"
+                                        className="w-full p-4 bg-gray-50 rounded-xl border border-gray-100 focus:ring-2 focus:ring-[#FE7F2D] outline-none"
+                                        value={newReview.description}
+                                        onChange={(e) => setNewReview({...newReview, description: e.target.value})}
+                                    ></textarea>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Opis *</label>
-                                    <textarea value={newReview.description} onChange={(e) => setNewReview({...newReview, description: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 min-h-[120px]" placeholder="Twoja opinia..." required />
-                                </div>
-                                <div className="flex justify-end gap-4">
-                                    <button type="button" onClick={() => setShowReviewForm(false)} className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl">Anuluj</button>
-                                    <button type="submit" disabled={reviewLoading} className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold disabled:opacity-50">
-                                        {reviewLoading ? 'Dodawanie...' : 'Wyślij'}
+                                <div className="flex justify-end">
+                                    <button 
+                                        disabled={reviewLoading}
+                                        className="bg-[#FE7F2D] text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform disabled:opacity-50"
+                                    >
+                                        {reviewLoading ? 'Wysyłanie...' : <><Send size={18} /> Opublikuj</>}
                                     </button>
                                 </div>
                             </form>
                         </div>
                     )}
 
-                    <div className="p-8">
-                        {reviews.length === 0 ? (
-                            <div className="text-center py-12">
-                                <MessageSquare size={32} className="text-gray-400 mx-auto mb-4" />
-                                <h3 className="text-xl font-bold text-slate-900 mb-2">Brak recenzji</h3>
-                                {!user && <button onClick={() => navigate('/login')} className="text-purple-600 font-bold">Zaloguj się, by dodać pierwszą!</button>}
-                            </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {reviews.length > 0 ? (
+                            reviews.map(review => <ReviewCard key={review.id} review={review} />)
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {reviews.map((review) => (
-                                    <ReviewCard key={review.review_id} review={review} currentUserId={user?.user_id} onDelete={handleDeleteReview} />
-                                ))}
+                            <div className="col-span-full py-12 text-center bg-white rounded-3xl border border-dashed border-gray-300">
+                                <p className="text-gray-400">Brak opinii. Bądź pierwszy!</p>
                             </div>
                         )}
                     </div>
@@ -375,23 +333,5 @@ const AdPage = () => {
         </div>
     );
 };
-
-const InfoRow = ({ label, value, icon, isStatus, statusValue, loading }) => (
-    <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
-        <div className="flex items-center">
-            {icon && <span className="mr-3 text-gray-400">{icon}</span>}
-            <span className="text-sm text-gray-600">{label}:</span>
-        </div>
-        {loading ? (
-            <div className="animate-pulse bg-gray-200 h-4 w-24 rounded"></div>
-        ) : isStatus ? (
-            <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${statusValue ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                {value}
-            </span>
-        ) : (
-            <span className="text-sm font-semibold text-slate-900">{value}</span>
-        )}
-    </div>
-);
 
 export default AdPage;

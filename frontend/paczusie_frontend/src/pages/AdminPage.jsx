@@ -10,10 +10,16 @@ const AdminPage = () => {
     const [activeTab, setActiveTab] = useState('users');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [alert, setAlert] = useState({ type: '', message: '' });
 
     useEffect(() => {
         loadData();
     }, []);
+
+    const showAlert = (type, message) => {
+        setAlert({ type, message });
+        setTimeout(() => setAlert({ type: '', message: '' }), 5000);
+    };
 
     const loadData = async () => {
         setLoading(true);
@@ -26,6 +32,7 @@ const AdminPage = () => {
             setAds(adData);
         } catch (error) {
             console.error('Błąd pobierania danych: ', error);
+            showAlert('error', 'Nie udało się załadować danych');
         } finally {
             setLoading(false);
         }
@@ -37,16 +44,18 @@ const AdminPage = () => {
             setAds(adData);
         } catch (error) {
             console.error('Błąd pobierania ogłoszeń: ', error);
+            showAlert('error', 'Nie udało się załadować ogłoszeń');
         }
     };
 
     const handleDeleteUser = async (userId) => {
-        if(!window.confirm('Czy na pewno chcesz usunąć tego użytkownika?')) return;
         try {
             await userService.delete(userId);
             loadData();
+            showAlert('success', 'Użytkownik został usunięty');
         } catch (error) {
             console.error('Błąd usuwania użytkownika: ', error);
+            showAlert('error', 'Nie udało się usunąć użytkownika');
         }
     };
 
@@ -56,29 +65,42 @@ const AdminPage = () => {
             if (user) {
                 await userService.update(userId, { role: newRole });
                 loadData();
+                showAlert('success', `Rola użytkownika zmieniona na ${getRoleName(newRole)}`);
             }
         } catch (error) {
             console.error('Błąd aktualizacji roli użytkownika: ', error);
+            showAlert('error', 'Nie udało się zmienić roli użytkownika');
         }
     };
 
     const handleApproveAd = async (adId) => {
-        if(!window.confirm('Czy na pewno chcesz zatwierdzić to ogłoszenie?')) return;
         try {
             await adService.approveAd(adId);
             loadAds();
+            showAlert('success', 'Ogłoszenie zostało zatwierdzone');
         } catch (error) {
             console.error('Błąd zatwierdzania ogłoszenia: ', error);
+            showAlert('error', 'Nie udało się zatwierdzić ogłoszenia');
         }
     };
 
     const handleDeleteAd = async (adId) => {
-        if(!window.confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) return;
         try {
             await adService.delete(adId);
             loadAds();
+            showAlert('success', 'Ogłoszenie zostało usunięte');
         } catch (error) {
             console.error('Błąd usuwania ogłoszenia: ', error);
+            showAlert('error', 'Nie udało się usunąć ogłoszenia');
+        }
+    };
+
+    const getRoleName = (role) => {
+        switch(role) {
+            case 'user': return 'Użytkownik';
+            case 'business_owner': return 'Przedsiębiorca';
+            case 'admin': return 'Admin';
+            default: return role;
         }
     };
 
@@ -90,7 +112,7 @@ const AdminPage = () => {
         return ads.filter(ad => {
             const matchesSearch = searchTerm === '' ||
                 ad.ad_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                ad.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (ad.description && ad.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                 ad.address.toLowerCase().includes(searchTerm.toLowerCase());
 
             const matchesStatus = statusFilter === 'all' ||
@@ -112,10 +134,7 @@ const AdminPage = () => {
     };
 
     const formatPrice = (price) => {
-
         const numPrice = parseFloat(price);
-
-        // jak numericPrice to NaN, to zwracamy 0
         const safePrice = isNaN(numPrice) ? 0 : numPrice;
 
         return safePrice.toLocaleString('pl-PL', {
@@ -142,6 +161,54 @@ const AdminPage = () => {
     return (
         <div className="bg-gradient-to-b from-[#FDF6E3] to-gray-50 min-h-screen pb-12">
             <Navbar />
+
+            {/* Alerty */}
+            {alert.message && (
+                <div className="fixed top-4 right-4 z-50 max-w-md">
+                    <div className={`p-4 rounded-xl shadow-lg border ${
+                        alert.type === 'success' 
+                            ? 'bg-green-50 border-green-200' 
+                            : 'bg-red-50 border-red-200'
+                    }`}>
+                        <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 mt-0.5">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    alert.type === 'success'
+                                        ? 'bg-green-100'
+                                        : 'bg-red-100'
+                                }`}>
+                                    <span className={`text-lg ${
+                                        alert.type === 'success' ? 'text-green-600' : 'text-red-600'
+                                    }`}>
+                                        {alert.type === 'success' ? '✓' : '!'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className={`font-semibold mb-1 ${
+                                    alert.type === 'success' ? 'text-green-800' : 'text-red-800'
+                                }`}>
+                                    {alert.type === 'success' ? 'Sukces' : 'Błąd'}
+                                </h3>
+                                <p className={`text-sm ${
+                                    alert.type === 'success' ? 'text-green-700' : 'text-red-700'
+                                }`}>
+                                    {alert.message}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setAlert({ type: '', message: '' })}
+                                className={`flex-shrink-0 ${
+                                    alert.type === 'success' ? 'text-green-500 hover:text-green-700' : 'text-red-500 hover:text-red-700'
+                                } transition-colors`}
+                                aria-label="Zamknij alert"
+                            >
+                                <span className="text-xl">×</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
                 <div className="text-center mb-10">
@@ -409,8 +476,8 @@ const AdminPage = () => {
                                                 </td>
                                                 <td className="py-4 px-6 font-medium text-slate-800 max-w-xs truncate">{ad.ad_title}</td>
                                                 <td className="py-4 px-6 text-gray-600 max-w-md truncate">{ad.description}</td>
-                                                
-                                                
+
+
                                                 <td className="py-4 px-6">
                                                     <span className="bg-slate-100 text-slate-900 font-bold px-3 py-1.5 rounded-lg">
                                                         {formatPrice(ad.price)} zł
