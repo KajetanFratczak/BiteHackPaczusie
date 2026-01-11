@@ -6,7 +6,6 @@ import api from '../services/api';
 import { adService } from '../services/adService';
 import { companyService } from '../services/companyService';
 
-// Funkcja do odmiany słowa "ogłoszenie"
 const getAdsDeclension = (count) => {
     const lastDigit = count % 10;
     const lastTwoDigits = count % 100;

@@ -425,6 +425,59 @@ def delete_ad_category(category_id: int, ad_id: int, session: Session = Depends(
     return
 
 #Reviews CRUD
+@app.get("/reviews/ad/{ad_id}")
+def get_reviews_by_ad(ad_id: int, session: Session = Depends(get_session)):
+    try:
+        # Sprawdź czy ogłoszenie istnieje
+        ad = session.get(Ad, ad_id)
+        if not ad:
+            raise HTTPException(status_code=404, detail="Ogłoszenie nie znalezione")
+
+        # Pobierz recenzje z informacjami o użytkowniku
+        reviews = session.exec(
+            select(Reviews).where(Reviews.ad_id == ad_id)
+        ).all()
+
+        # Dla każdej recenzji dodaj informacje o użytkowniku
+        reviews_with_user = []
+        for review in reviews:
+            review_dict = review.dict()
+            # Możesz dodać logikę do pobierania nazwy użytkownika jeśli potrzebne
+            reviews_with_user.append(review_dict)
+
+        return reviews_with_user
+    except Exception as e:
+        print(f"Błąd w get_reviews_by_ad: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Błąd pobierania recenzji: {str(e)}")
+
+
+@app.get("/reviews/ad/{ad_id}/average")
+def get_average_rating(ad_id: int, session: Session = Depends(get_session)):
+    try:
+        reviews = session.exec(
+            select(Reviews).where(Reviews.ad_id == ad_id)
+        ).all()
+
+        if not reviews:
+            return {"average": 0, "count": 0}
+
+        total_rating = sum(review.rating for review in reviews)
+        average = total_rating / len(reviews)
+
+        return {"average": average, "count": len(reviews)}
+    except Exception as e:
+        print(f"Błąd w get_average_rating: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Błąd obliczania średniej oceny: {str(e)}")
+
+
+# Dodaj ten endpoint do istniejącego /reviews/{review_id}
+@app.get("/reviews/{review_id}")
+def get_review(review_id: int, session: Session = Depends(get_session)):
+    review = session.get(Reviews, review_id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Recenzja nie znaleziona")
+    return review
+
 @app.post("/reviews")
 def create_review(review: Reviews, session: Session = Depends(get_session)):
     session.add(review)

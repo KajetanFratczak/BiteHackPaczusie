@@ -19,11 +19,14 @@ function App() {
         <Routes>
           {/* Strona Główna */}
           <Route path="/" element={<HomePage />} />  
-          {/* Szczegóły ogłoszenia */}
-          <Route path="/ads/:id" element={<AdPage /> } />    
-          {/* Strona logowania  */}
+
+          {/* Szczegóły ogłoszenia - teraz z recenzjami */}
+          <Route path="/ads/:id" element={<AdPage /> } />
+
+          {/* Strona logowania */}
           <Route path="/login" element={<LoginPage />} />
-          {/* Strona rejestracji  */}
+
+          {/* Strona rejestracji */}
           <Route path="/register" element={<RegisterPage />} />
 
           <Route path="/business/:bp_id" element={<BusinessProfilePage />} />
@@ -31,10 +34,18 @@ function App() {
           {/* Protected Routes - dla admina oraz lokalnych przedsiębiorców */}
 
           {/* Panel Admina - do zarządzania użytkownikami i zatwierdzania ogłoszeń */}
-          <Route path="/admin/users" element={<ProtectedRoute requiredRoles={['admin']}><AdminPage /></ProtectedRoute>} />
+          <Route path="/admin/users" element={
+            <ProtectedRoute requiredRoles={['admin']}>
+              <AdminPage />
+            </ProtectedRoute>
+          } />
 
-          {/* Potrzebujemy jeszcze strony profilu biznesu */}
-          <Route path="/profile" element={<ProtectedRoute requiredRoles={['business_owner']}><ProfilePage /></ProtectedRoute>} />
+          {/* Strona profilu użytkownika */}
+          <Route path="/profile" element={
+            <ProtectedRoute requiredRoles={['business_owner']}>
+              <ProfilePage />
+            </ProtectedRoute>
+          } />
 
         </Routes>
       </AuthProvider>
