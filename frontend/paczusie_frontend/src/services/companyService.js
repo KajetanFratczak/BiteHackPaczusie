@@ -12,7 +12,7 @@ export const companyService = {
     },
 
     async create(businessData) {
-        const response = await api.post('/businesess', businessData);
+        const response = await api.post('/businesses', businessData);
         return response.data;
     },
 

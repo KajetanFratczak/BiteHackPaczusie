@@ -61,7 +61,7 @@ const AdPage = () => {
                     </div>
                     <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 min-w-[180px] text-center">
                         <span className="text-xs text-gray-400 uppercase font-semibold block mb-1">Cena</span>
-                        <span className="text-2xl font-black text-slate-900">{ad.price} PLN</span>
+                        <span className="text-2xl font-black text-slate-900">{ad.price}</span>
                     </div>
                 </div>
 

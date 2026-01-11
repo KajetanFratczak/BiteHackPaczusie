@@ -40,7 +40,7 @@ const HomePage = () => {
           id: ad.ad_id,
           title: ad.ad_title,
           description: ad.description,
-          image: ad.images[0] || null
+          images: ad.images || []
         })));
       } catch (error) {
         console.error('Błąd pobierania ogłoszeń:', error);
@@ -91,7 +91,7 @@ const HomePage = () => {
                     id={ad.id}
                     title={ad.title}
                     description={ad.description}
-                    image={ad.image}
+                    images={ad.images}
                 />
                 ))
             ) : (
