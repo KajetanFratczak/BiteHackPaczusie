@@ -2,6 +2,8 @@
 
 **OtoBiznes** to nowoczesna platforma internetowa łącząca lokalnych przedsiębiorców z klientami. Aplikacja umożliwia małym firmom budowanie cyfrowej obecności poprzez profile biznesowe i ogłoszenia, a użytkownikom ułatwia odnalezienie sprawdzonych usług w ich okolicy.
 
+### Link do strony: https://arcane-server.pl/otobiznes/
+
 ---
 
 ## 🚀 Kluczowe Funkcjonalności
